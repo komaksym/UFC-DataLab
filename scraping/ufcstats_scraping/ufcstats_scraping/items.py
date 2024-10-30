@@ -13,6 +13,9 @@ class EventData(scrapy.Item):
 
 
 class GeneralFightData(scrapy.Item):
+    event_name = scrapy.Field()
+    event_date = scrapy.Field()
+    event_location = scrapy.Field()
     red_fighter_name = scrapy.Field()
     blue_fighter_name = scrapy.Field()
     red_fighter_nickname = scrapy.Field()

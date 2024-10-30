@@ -19,6 +19,11 @@ class UfcstatsScrapingPipeline:
         for fieldname in adapter.field_names():
             value = adapter.get(fieldname)
             
+            # Remove %
+            if '%' in value:
+                value = re.sub("%", "", value)
+
+            # If it's a list, join into a string
             if isinstance(value, list):
                 value = " ".join(value)
                 value = value.replace("\n", "").split()
@@ -29,18 +34,14 @@ class UfcstatsScrapingPipeline:
 
         # Removing extra symbols from the nicknames
         if adapter.get('red_fighter_nickname') is not None:
-            adapter['red_fighter_nickname'] = re.sub('["\\\]', '', adapter.get('red_fighter_nickname'))
+            adapter['red_fighter_nickname'] = re.sub(r'["\\]', '', adapter.get('red_fighter_nickname'))
 
         if adapter.get('blue_fighter_nickname') is not None:
-            adapter['blue_fighter_nickname'] = re.sub('["\\\]', '', adapter.get('blue_fighter_nickname'))
+            adapter['blue_fighter_nickname'] = re.sub(r'["\\]', '', adapter.get('blue_fighter_nickname'))
 
         # Extracting the bonus type from the img src attribute
         if adapter.get('bonus') is not None:
             if adapter.get('bonus') != "-":
-                adapter['bonus'] = re.findall("\w+(?=\.png)", adapter.get('bonus'))[0]
+                adapter['bonus'] = re.findall(r"\w+(?=\.png)", adapter.get('bonus'))[0]
 
-        return item 
-
-
-
-# response.xpath("//p[@class='b-fight-details__text'][2]//text()[normalize-space() and not (contains(., 'Details:'))]").getall()
+        return item

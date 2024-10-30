@@ -1,3 +1,4 @@
+import pdb
 import scrapy
 from ..items import EventData, GeneralFightData, \
                     DetailedFightData_Totals, DetailedFightData_Sig_strikes 
@@ -6,16 +7,32 @@ from ..items import EventData, GeneralFightData, \
 class UFCSpider(scrapy.Spider):
     name = "ufc_spider"
     allowed_domains = ["ufcstats.com"]
-    start_urls = ["http://ufcstats.com/fight-details/b09f54654b0f95f5"]
+    start_urls = ["http://ufcstats.com/statistics/events/completed?page=all"]
 
     def parse(self, response):
-        # The event page
-        #event_loader = ItemLoader(item=EventData(), response=response)
-        #event_loader.add_xpath("event", "//span[@class='b-content__title-highlight']/text()")
-        #event_loader.add_xpath("date", "//li[@class='b-list__box-list-item']/text()[1]")
-        #event_loader.add_xpath("location", "//li[@class='b-list__box-list-item']/text()[3]")
-        #yield event_loader.load_item()
+        """Events and fights page"""
+        events_links = response.xpath("//a[@class='b-link b-link_style_black']/@href").getall()[:2]
+        events_links.reverse()
+        for event_link in events_links:
+            yield scrapy.Request(url=event_link, callback=self.parse_event)
 
+    def parse_event(self, response):
+        # Scraping the event data
+        event_data = {}
+        event_data_base_path = "/html/body/section/div/"
+        event_data["event"] = response.xpath(f"{event_data_base_path}h2/span/text()").get()
+        event_data["date"] = response.xpath(f"{event_data_base_path}div/div[1]/ul/li[1]/text()[normalize-space()]").get()
+        event_data["location"] = response.xpath(f"{event_data_base_path}div/div[1]/ul/li[2]/text()[normalize-space()]").get()
+
+        # Extract links of each individual fight in that event
+        fights_links = response.xpath("//a[@class='b-flag b-flag_style_green']/@href").getall()[::-1]
+        for fight_link in fights_links:
+            yield scrapy.Request(url=fight_link, callback=self.parse_fight, meta={"event_data": event_data})
+
+    def parse_fight(self, response):
+        event_data_item = response.meta["event_data"]
+
+        """Parse each individual fight matchup"""
         # General fight data
         general_fight_data_item = GeneralFightData()
         general_fight_base_path = "/html/body/section/div/div/div"
@@ -34,6 +51,10 @@ class UFCSpider(scrapy.Spider):
         general_fight_data_item["details"] = response.xpath("//p[@class='b-fight-details__text'][2]//text()[normalize-space() and not (contains(., 'Details:'))]").getall()
         general_fight_data_item["bout_type"] = response.xpath(f"{general_fight_base_path}[2]/div[1]/i/text()").getall()[-1]
         general_fight_data_item["bonus"] = response.xpath(f"{general_fight_base_path}[2]/div[1]/i/img/@src").get("-")
+
+        general_fight_data_item['event_name'] = event_data_item["event"]
+        general_fight_data_item['event_date'] = event_data_item["date"]
+        general_fight_data_item['event_location'] = event_data_item["location"]
         yield general_fight_data_item
 
         # Detailed Fight data totals
