@@ -12,10 +12,7 @@ class EventData(scrapy.Item):
     location = scrapy.Field()
 
 
-class GeneralFightData(scrapy.Item):
-    event_name = scrapy.Field()
-    event_date = scrapy.Field()
-    event_location = scrapy.Field()
+class FightData(scrapy.Item):
     red_fighter_name = scrapy.Field()
     blue_fighter_name = scrapy.Field()
     red_fighter_nickname = scrapy.Field()
@@ -30,9 +27,10 @@ class GeneralFightData(scrapy.Item):
     details = scrapy.Field()
     bout_type = scrapy.Field()
     bonus = scrapy.Field()
+    event_name = scrapy.Field()
+    event_date = scrapy.Field()
+    event_location = scrapy.Field()
 
-
-class DetailedFightData_Totals(scrapy.Item):
     red_fighter_KD = scrapy.Field()
     blue_fighter_KD = scrapy.Field()
     red_fighter_sig_str = scrapy.Field()
@@ -52,8 +50,6 @@ class DetailedFightData_Totals(scrapy.Item):
     red_fighter_ctrl = scrapy.Field()
     blue_fighter_ctrl = scrapy.Field()
 
-
-class DetailedFightData_Sig_strikes(scrapy.Item):
     red_fighter_sig_str_head = scrapy.Field()
     blue_fighter_sig_str_head = scrapy.Field()
     red_fighter_sig_str_body = scrapy.Field()
@@ -80,4 +76,3 @@ class DetailedFightData_Sig_strikes(scrapy.Item):
     blue_fighter_sig_str_clinch_pct = scrapy.Field()
     red_fighter_sig_str_ground_pct = scrapy.Field()
     blue_fighter_sig_str_ground_pct = scrapy.Field()
-
