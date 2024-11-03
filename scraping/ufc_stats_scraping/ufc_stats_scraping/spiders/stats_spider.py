@@ -108,4 +108,4 @@ class UFCSpider(scrapy.Spider):
         fight_data_item["red_fighter_sig_str_ground_pct"] = response.xpath(f"{detailed_fight_sigstr_pos_base_path}[2]/div/div[2]/div[3]/i[1]/text()").get("-")
         fight_data_item["blue_fighter_sig_str_ground_pct"] = response.xpath(f"{detailed_fight_sigstr_pos_base_path}[2]/div/div[2]/div[3]/i[3]/text()").get("-")
 
-        yield fight_data_item
+        yield fight_data_item 
