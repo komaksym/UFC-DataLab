@@ -13,9 +13,14 @@ from scrapy.pipelines.images import ImagesPipeline
 
 
 class ScorecardImagesPipeline(ImagesPipeline):
+    def __init__(self, store_uri, download_func=None, settings=None):
+        super().__init__(store_uri, settings=settings, download_func=download_func)
+        self.counter = 0
+
     def get_media_requests(self, item, info): 
-        for i, image_url in enumerate(item['image_urls']):
-            yield scrapy.Request(image_url, meta={"img_index": i})
+        for image_url in item['image_urls']:
+            yield scrapy.Request(image_url, meta={"img_index": self.counter})
+            self.counter += 1
 
     def file_path(self, request, response=None, info=None, *, item=None):
         img_index = request.meta["img_index"]
