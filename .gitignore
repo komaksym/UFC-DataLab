@@ -1,0 +1,5 @@
+# Virtual environment
+venv/
+
+# MacOS utils
+.DS_Store

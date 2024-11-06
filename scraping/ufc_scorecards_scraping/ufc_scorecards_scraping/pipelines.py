@@ -15,19 +15,24 @@ from scrapy.pipelines.images import ImagesPipeline
 class ScorecardImagesPipeline(ImagesPipeline):
     def __init__(self, store_uri, download_func=None, settings=None):
         super().__init__(store_uri, settings=settings, download_func=download_func)
-        self.counter = 0
+        self.counter = 1391
 
+    # Gets the URLs of the images
     def get_media_requests(self, item, info): 
         for image_url in item['image_urls']:
             yield scrapy.Request(image_url, meta={"img_index": self.counter})
             self.counter += 1
 
+    # Specifies a custom path & name
     def file_path(self, request, response=None, info=None, *, item=None):
         img_index = request.meta["img_index"]
         return f"scorecard_images_results/{img_index}.jpg"
 
     def item_completed(self, results, item, info):
-        #pdb.set_trace()
+        """
+        Is called when all image requests for an item are completed,
+        where we store the download paths
+        """
         image_paths = [x["path"] for ok, x in results if ok]
         if not image_paths:
             raise DropItem("Item contains no images")
