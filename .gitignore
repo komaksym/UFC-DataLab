@@ -1,5 +1,7 @@
 # Virtual environment
 venv/
+.python-version
 
 # MacOS utils
 .DS_Store
+

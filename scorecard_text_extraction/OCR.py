@@ -1,36 +1,21 @@
-from paddleocr import PaddleOCR
-import cv2
+from paddleocr import PaddleOCR, draw_ocr
+from PIL import Image
 
-def extract_text_from_scorecard(image_path):
-    # Initialize PaddleOCR
-    ocr = PaddleOCR(use_angle_cls=True, lang='en')
-    
-    # Read image
-    img = cv2.imread(image_path)
-    
-    # Perform OCR
-    result = ocr.ocr(img)
-    
-    # Extract text and confidence scores
-    extracted_data = []
-    for line in result[0]:  # result[0] contains the results
-        coordinates = line[0]  # Position of text
-        text = line[1][0]     # The actual text
-        confidence = line[1][1]  # Confidence score
-        
-        extracted_data.append({
-            'text': text,
-            'confidence': confidence,
-            'position': coordinates
-        })
-    
-    return extracted_data
 
-# Example usage
-image_path = '../datasets/scorecard_images_results/15.jpg'
-data = extract_text_from_scorecard(image_path)
+ocr = PaddleOCR(lang='en') # need to run only once to download and load model into memory
+img_path = 'datasets/scorecard_images_results/15.jpg'
+result = ocr.ocr(img_path, cls=False)
+for idx in range(len(result)):
+    res = result[idx]
+    for line in res:
+        print(line)
 
-# Print results
-for item in data:
-    if item['confidence'] > 0.7:  # Filter low confidence results
-        print(f"Text: {item['text']}, Confidence: {item['confidence']:.2f}")
+
+result = result[0]
+image = Image.open(img_path).convert('RGB')
+boxes = [line[0] for line in result]
+txts = [line[1][0] for line in result]
+scores = [line[1][1] for line in result]
+im_show = draw_ocr(image, boxes, txts, scores, font_path='/System/Library/Fonts/Arial.ttf')
+im_show = Image.fromarray(im_show)
+im_show.save('result.jpg')
