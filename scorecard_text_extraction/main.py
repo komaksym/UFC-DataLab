@@ -3,7 +3,7 @@ from PIL import Image
 
 
 ocr = PaddleOCR(lang='en') # need to run only once to download and load model into memory
-img_path = 'datasets/scorecard_images_results/15.jpg'
+img_path = '../datasets/scorecard_images_results/mkevin-holland-alex-oliveira-ufc-272-scorecard.jpg'
 result = ocr.ocr(img_path, cls=False)
 for idx in range(len(result)):
     res = result[idx]
