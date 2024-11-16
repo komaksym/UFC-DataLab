@@ -7,11 +7,7 @@ from multiprocessing import Pool
 import pandas as pd
 
 
-red_fighter_name = []
-blue_fighter_name = []
-date = []
-red_fighter_total_pts = []
-blue_fighter_total_pts = []
+count = 2
 
 
 def read_images(path):
@@ -23,7 +19,8 @@ def read_images(path):
     Returns:
         list[str]: Paths to each of the images.
     """
-    images = [os.path.join(path, image) for image in os.listdir(path)[:200] if image.endswith('.jpg')]
+    images = [os.path.join(path, image) for image in os.listdir(path) if image.endswith('.jpg')]
+    
     return images
 
 
@@ -32,11 +29,11 @@ def parse_image(image):
     ocr_instance = PaddleOCR(use_angle_cls=False, lang='en')
 
     # Needed data
-    temp_red_fighter_name = []
-    temp_blue_fighter_name = []
-    temp_date = []
-    temp_red_fighter_total_pts = []
-    temp_blue_fighter_total_pts = []
+    red_fighter_name = "-"
+    blue_fighter_name = "-"
+    date = "-"
+    red_fighter_total_pts = []
+    blue_fighter_total_pts = []
 
     # Ocr instance
     result = ocr_instance.ocr(image, cls=False)
@@ -48,77 +45,68 @@ def parse_image(image):
             text = item[1][0]
             # Extracting fighter names
             if text.lower() == "vs.":
-                temp_red_fighter_name.append(res[jdx-1][1][0])
-                temp_blue_fighter_name.append(res[jdx+1][1][0])
+                red_fighter_name = res[jdx-1][1][0]
+                blue_fighter_name = res[jdx+1][1][0]
 
             # Extracting the date of the fight
             elif re.findall(r"(\d+\/\d+\/\d+)", text):
-                temp_date.append(*re.findall(r"(\d+\/\d+\/\d+)", text))
+                date = re.findall(r"(\d+\/\d+\/\d+)", text)[0]
 
             # Parsing the total points
             elif sum(1 for w, t in zip(text.lower(), "total") if w != t) < 2 and 4 <= len(text) <= 5:
                 total_points_red = res[jdx-1][1][0]
                 total_points_blue = res[jdx+1][1][0]
                 if total_points_red.lower() == "total" or total_points_blue.lower() == "total":
-                    temp_red_fighter_total_pts.append("-")
-                    temp_blue_fighter_total_pts.append("-")
+                    red_fighter_total_pts.append("-")
+                    blue_fighter_total_pts.append("-")
                 else:
-                    temp_red_fighter_total_pts.append(total_points_red)
-                    temp_blue_fighter_total_pts.append(total_points_blue)
+                    red_fighter_total_pts.append(total_points_red)
+                    blue_fighter_total_pts.append(total_points_blue)
 
-    if len(temp_red_fighter_total_pts) != 3 or len(temp_blue_fighter_total_pts) != 3 \
-            or len(temp_date) != 1 or len(temp_red_fighter_name) != 1 \
-            or len(temp_blue_fighter_name) != 1:
+    if len(red_fighter_total_pts) != 3 or len(blue_fighter_total_pts) != 3 or red_fighter_name == "-" or blue_fighter_name == "-":
+        print(f"\nImage: {image}\n")
         results = {
-            "red_fighter_name": temp_red_fighter_name,
-            "blue_fighter_name": temp_blue_fighter_name,
-            "date": temp_date,
-            "red_fighter_total_pts": temp_red_fighter_total_pts,
-            "blue_fighter_total_pts": temp_blue_fighter_total_pts
-        }
-        print("\n\nOUTLIER:\n\n")
-        print(f"\n\n{item[1][0]}\n\n")
-        print(f"\n\n\n{results}\n\n\n")
-        print(f"len(red_fighter_name): {len(temp_red_fighter_name)}")
-        print(f"len(blue_fighter_name): {len(temp_blue_fighter_name)}")
-        print(f"len(date): {len(temp_date)}")
-        print(f"len(red_fighter_total_pts): {len(temp_red_fighter_total_pts)}")
-        print(f"len(blue_fighter_total_pts): {len(temp_blue_fighter_total_pts)}")
-
-    red_fighter_name.append(temp_red_fighter_name)
-    blue_fighter_name.append(temp_blue_fighter_name)
-    date.append(temp_date)
-    red_fighter_total_pts.append(temp_red_fighter_total_pts)
-    blue_fighter_total_pts.append(temp_blue_fighter_total_pts)
-
-    return {"red_fighter_name": red_fighter_name,
+            "red_fighter_name": red_fighter_name,
             "blue_fighter_name": blue_fighter_name,
             "date": date,
             "red_fighter_total_pts": red_fighter_total_pts,
-            "blue_fighter_total_pts": blue_fighter_total_pts}
+            "blue_fighter_total_pts": blue_fighter_total_pts
+        }
+        print("\nOUTLIER:\n")
+        print(f"\n{text}\n")
+        print(f"\n{results}\n")
+        print(f"len(red_fighter_total_pts): {len(red_fighter_total_pts)}")
+        print(f"len(blue_fighter_total_pts): {len(blue_fighter_total_pts)}\n")
+
+    return [red_fighter_name,
+            blue_fighter_name,
+            date,
+            red_fighter_total_pts,
+            blue_fighter_total_pts]
 
 
 def main():
-    folder_path = 'datasets/scorecard_images_results/new_version/'
+    folder_path = 'datasets/scorecards/scraped_scorecards/scorecard_images_results/new_version/'
     images = read_images(folder_path)
 
     collected_results = []
 
     # Multiprocessing
     with Pool(8) as pool:
-        for result in tqdm(pool.imap(parse_image, images), total=len(images), unit="image"):
+        for pos, result in enumerate(tqdm(pool.imap(parse_image, images), total=len(images), unit="image"), start=2):
+            print(f"\n\nPosition: {pos}\n\n")
             collected_results.append(result)
-
-    results = {"red_fighter_name": [entry["red_fighter_name"][0][0] for entry in collected_results],
-               "blue_fighter_name": [entry["blue_fighter_name"][0][0] for entry in collected_results],
-               "date": [entry["date"][0][0] for entry in collected_results],
-               "red_fighter_total_pts": [entry["red_fighter_total_pts"][0] for entry in collected_results],
-               "blue_fighter_total_pts": [entry["blue_fighter_total_pts"][0] for entry in collected_results]}
+ 
+    results = {"red_fighter_name": [data_point[0] for data_point in collected_results],
+               "blue_fighter_name": [data_point[1] for data_point in collected_results],
+               "date": [data_point[2] for data_point in collected_results],
+               "red_fighter_total_pts": [data_point[3] for data_point in collected_results],
+               "blue_fighter_total_pts": [data_point[4] for data_point in collected_results]}
      
     results_df = pd.DataFrame(results)
     print(results_df)
 
-    results_df.to_csv("datasets/parsed_scorecards.csv", index=False)
+    results_df.to_csv("datasets/scorecards/OCR_parsed_scorecards/parsed_scorecards_new_version", index=False)
 
 
 if __name__ == "__main__":
