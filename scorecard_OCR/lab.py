@@ -1,12 +1,15 @@
-months = {
-    "January": 1, "February": 2, "March": 3,
-    "April": 4, "May": 5, "June": 6,
-    "July": 7, "August": 8, "September": 9,
-    "October": 10, "November": 11, "December": 12
-}
+import pdb
 
-foo = "October 26, 2024"
+def month_conversion(date):
+    date = date.replace(" ", "")
+    day, month, year = date.split("/")
 
+    if int(day) < 10 and not day.startswith("0"):
+        day = f"0{day}"
+    if int(month) < 10 and not month.startswith("0"):
+        month = f"0{month}"
 
-month, day, year = foo.replace(",", "").split()
-print(f"{day}/{months[month]}/{year}")
+    return f"{day}/{month}/{year}"
+
+foo = "5/8/2020"
+print(month_conversion(foo))
