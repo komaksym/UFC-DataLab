@@ -1,4 +1,0 @@
-1. Fix adding the non-full data
-4. Run over the full directory
-5. Add manually what OCR missed
-
