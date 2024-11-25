@@ -4,7 +4,7 @@ from ..items import FightData
 
 
 class UFCSpider(scrapy.Spider):
-    name = "ufc_spider"
+    name = "ufc_stats"
     allowed_domains = ["ufcstats.com"]
     start_urls = ["http://ufcstats.com/statistics/events/completed?page=all"]
 

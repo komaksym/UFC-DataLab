@@ -3,7 +3,7 @@ from ..items import ScorecardImagesItem
 
 
 class ScorecardsSpider(scrapy.Spider):
-    name = "images_spider"
+    name = "ufc_scorecards"
     allowed_domains = ["www.ufc.com", "cloudfront.net"]
     start_urls = ["https://www.ufc.com/scorecards"]
 
