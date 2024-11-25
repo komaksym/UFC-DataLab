@@ -32,4 +32,4 @@ class BackupScorecardsSpider(scrapy.Spider):
         scorecards_item = ScorecardImagesItem()
         scorecards_item['image_urls'] = response.xpath('//*[@id="block-mainpagecontent"]/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/img/@src').getall()[::-1]
         yield scorecards_item
-        
+    

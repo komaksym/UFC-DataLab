@@ -12,7 +12,6 @@ BOT_NAME = "ufc_scorecards_scraping"
 SPIDER_MODULES = ["ufc_scorecards_scraping.spiders"]
 NEWSPIDER_MODULE = "ufc_scorecards_scraping.spiders"
 
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "ufc_scorecards_scraping (+http://www.yourdomain.com)"
 
@@ -94,6 +93,7 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
+# BFS Order
 DEPTH_PRIORITY = 1
 SCHEDULER_DISK_QUEUE = "scrapy.squeues.PickleFifoDiskQueue"
 SCHEDULER_MEMORY_QUEUE = "scrapy.squeues.FifoMemoryQueue"

@@ -39,7 +39,7 @@ class UFCSpider(scrapy.Spider):
                     url=event_link,
                     callback=self.parse_event,
                     errback=self.handle_error,
-                    meta={'dont_retry': True}
+                    meta={'dont_retry': False}
                 )
         except Exception as e:
             logger.error(f"Error parsing events page: {str(e)}")

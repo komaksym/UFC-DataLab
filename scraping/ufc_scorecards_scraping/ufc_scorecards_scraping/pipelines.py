@@ -15,7 +15,7 @@ from scrapy.pipelines.images import ImagesPipeline
 class ScorecardImagesPipeline(ImagesPipeline):
     def __init__(self, store_uri, download_func=None, settings=None):
         super().__init__(store_uri, settings=settings, download_func=download_func)
-        self.counter = 1391
+        self.counter = 0
 
     # Gets the URLs of the images
     def get_media_requests(self, item, info): 
