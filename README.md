@@ -8,8 +8,8 @@ This repo collects and organizes UFC Fight data, including stats, scorecards, an
 - Organized dataset storage for analysis.
 
 ## Installation
-1. Clone the repository:
 ```bash
+1. Clone the repository:
 git clone https://github.com/komaksym/UFC_fights_dataset_collection.git
 2. Install dependancies:
 pip install -r requirements.txt
@@ -28,7 +28,7 @@ python scorecard_OCR/app.py
 
 ## Directory Structure
 .
-├- datasets			                             # Contains collected and processed data
+├- datasets			                 # Contains collected and processed data
 │       
 ├── merged_stats_n_scorecards                    # Merged scorecard images and stats
 │   ├── scorecards                               # Scorecard images and OCR results
