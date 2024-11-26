@@ -9,35 +9,34 @@ class UFCSpider(scrapy.Spider):
     start_urls = ["http://ufcstats.com/statistics/events/completed?page=all"]
 
     def parse(self, response):
-        """Events and fights page"""
-
-        # Extract links to all UFC events
-        events_links = response.xpath("//a[@class='b-link b-link_style_black']/@href").getall()
-        # Go through each event
+        """Extract and follow links to all UFC events."""
+        events_links = response.css("a.b-link.b-link_style_black::attr(href)").getall()
         for event_link in events_links:
             yield scrapy.Request(url=event_link, callback=self.parse_event)
 
     def parse_event(self, response):
-        # Scraping the event data
-        event_data = {}
-        event_data_base_path = "/html/body/section/div/"
-        event_data["event"] = response.xpath(f"{event_data_base_path}h2/span/text()").get("-")
-        event_data["date"] = response.xpath(f"{event_data_base_path}div/div[1]/ul/li[1]/text()[normalize-space()]").get("-")
-        event_data["location"] = response.xpath(f"{event_data_base_path}div/div[1]/ul/li[2]/text()[normalize-space()]").get("-")
+        """Extract event data and follow links to individual fights."""
+        event_data = {
+            "name": response.css("h2.b-content__title span::text").get("-"),
+            "date": response.css("li.b-list__box-list-item:nth-child(1)::text").get("-").strip(),
+            "location": response.css("li.b-list__box-list-item:nth-child(2)::text").get("-").strip()
+        }
 
-        # Extract links of each individual fight in that event
-        fights_links = response.xpath("//a[@class='b-flag b-flag_style_green']/@href").getall()
-        # Go through each fight
+        fights_links = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()
         for fight_link in fights_links:
-            yield scrapy.Request(url=fight_link, callback=self.parse_fight, meta={"event_data": event_data})
+            yield scrapy.Request(
+                url=fight_link, 
+                callback=self.parse_fight, 
+                meta={"event_data": event_data},
+                errback=self.handle_error
+            )
 
     def parse_fight(self, response):
-        """Parse each individual fight matchup"""
+        """Parse individual fight data using more robust selectors."""
         event_data = response.meta["event_data"]
-
-        # General fight data
         fight_data_item = FightData()
         general_fight_base_path = "/html/body/section/div/div/div"
+        
         fight_data_item["red_fighter_name"] = response.xpath(f"{general_fight_base_path}[1]/div[1]/div/h3/a/text()").get("-")
         fight_data_item["blue_fighter_name"] = response.xpath(f"{general_fight_base_path}[1]/div[2]/div/h3/a/text()").get("-")
         fight_data_item["red_fighter_nickname"] = response.xpath(f"{general_fight_base_path}[1]/div[1]/div/p/text()").get("-")
@@ -54,7 +53,7 @@ class UFCSpider(scrapy.Spider):
         fight_data_item["bonus"] = response.xpath(f"{general_fight_base_path}[2]/div[1]/i/img/@src").get("-")
         
         # Event data
-        fight_data_item['event_name'] = event_data["event"]
+        fight_data_item['event_name'] = event_data["name"]
         fight_data_item['event_date'] = event_data["date"]
         fight_data_item['event_location'] = event_data["location"]
         
@@ -109,4 +108,14 @@ class UFCSpider(scrapy.Spider):
         fight_data_item["red_fighter_sig_str_ground_pct"] = response.xpath(f"{detailed_fight_sigstr_pos_base_path}[2]/div/div[2]/div[3]/i[1]/text()").get("-")
         fight_data_item["blue_fighter_sig_str_ground_pct"] = response.xpath(f"{detailed_fight_sigstr_pos_base_path}[2]/div/div[2]/div[3]/i[3]/text()").get("-")
 
-        yield fight_data_item 
+        # Add error handling for critical data
+        if fight_data_item["red_fighter_name"] == "-" or fight_data_item["blue_fighter_name"] == "-":
+            self.logger.error(f"Missing fighter names for fight at URL: {response.url}")
+            return None
+
+        yield fight_data_item
+
+    def handle_error(self, failure):
+        """Handle request failures."""
+        self.logger.error(f"Request failed: {failure.request.url}")
+        self.logger.error(f"Error: {failure.value}")
