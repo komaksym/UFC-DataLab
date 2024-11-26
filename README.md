@@ -11,6 +11,7 @@ This repo collects and organizes UFC Fight data, including stats, scorecards, an
 ```bash
 1. Clone the repository:
 git clone https://github.com/komaksym/UFC_fights_dataset_collection.git
+
 2. Install dependancies:
 pip install -r requirements.txt
 ```
