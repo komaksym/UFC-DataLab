@@ -28,6 +28,7 @@ scrapy crawl ufc_scorecards
 
 3. To OCR parse the scraped scorecards:
 python scorecard_OCR/app.py
+```
 
 ## Directory Structure
 .
