@@ -31,7 +31,7 @@ python scorecard_OCR/app.py
 
 ## Directory Structure
 .
-├- datasets			                    # Contains collected and processed data
+├- datasets			                  # Contains collected and processed data
 │       
 ├── merged_stats_n_scorecards                    # Merged scorecard images and stats
 │   ├── scorecards                               # Scorecard images and OCR results
