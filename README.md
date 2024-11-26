@@ -13,8 +13,10 @@ This repo collects and organizes UFC Fight data, including stats, scorecards, an
 git clone https://github.com/komaksym/UFC_fights_dataset_collection.git
 2. Install dependancies:
 pip install -r requirements.txt
+```
 
 ## Usage
+```bash
 1. To scrape  UFC stats:
 cd scraping/ufc_stats_scraping
 scrapy crawl ufc_spider -O results.json
