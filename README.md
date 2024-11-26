@@ -31,6 +31,7 @@ python scorecard_OCR/app.py
 ```
 
 ## Directory Structure
+```bash
 .
 ├- datasets			                 # Contains collected and processed data
 │       
