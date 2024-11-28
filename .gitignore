@@ -1,3 +1,4 @@
+s
 # Virtual environment
 venv/
 .python-version
@@ -7,3 +8,7 @@ venv/
 
 # Python bytecode
 __pycache__/
+
+# .ipynb stuff
+.eda.ipynb.layout
+.virtual_documents/
