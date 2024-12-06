@@ -6,6 +6,7 @@ This repo collects and organizes UFC Fight data, including stats, scorecards, an
 - Scraping UFC stats and scorecards.
 - OCR processing of scorecard images.
 - Organized dataset storage for analysis.
+- Exploratory Data Anslysis.
 
 ## Installation
 ```bash
