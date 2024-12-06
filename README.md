@@ -1,6 +1,6 @@
 # UFC Data Lab
 
-This repo collects and organizes UFC Fight data, including stats, scorecards, and OCR-processed results. It provides tools for scraping, parsing, and analyzing fight information, making it useful for sports analytics, machine learning and research.
+This repo collects, preprocesses and does EDA on UFC Fight data, including stats, scorecards, and OCR-processed results. It provides tools used for scraping, parsing, and analyzing fight information, making it useful for sports analytics, machine learning and research.
 
 ## Features
 - Scraping UFC stats and scorecards.
