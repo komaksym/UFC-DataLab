@@ -1,11 +1,12 @@
 # UFC Data Lab
 
-This repo collects and organizes UFC Fight data, including stats, scorecards, and OCR-processed results. It provides tools for scraping, parsing, and analyzing fight information, making it useful for sports analytics, machine learning and research.
+This repo collects, preprocesses and does EDA on UFC Fight data, including stats, scorecards, and OCR-processed results. It provides tools used for scraping, parsing, and analyzing fight information, making it useful for sports analytics, machine learning and research.
 
 ## Features
 - Scraping UFC stats and scorecards.
 - OCR processing of scorecard images.
 - Organized dataset storage for analysis.
+- Exploratory Data Anslysis.
 
 ## Installation
 ```bash
@@ -33,8 +34,8 @@ python scorecard_OCR/app.py
 ## Directory Structure
 ```bash
 .
-├- datasets			                 # Contains collected and processed data
-│       
+├── EDA                                          # Exploratory Data Analysis
+├── datasets  	                                 # Contains collected and processed data       
 ├── merged_stats_n_scorecards                    # Merged scorecard images and stats
 │   ├── scorecards                               # Scorecard images and OCR results
 │   │   ├── OCR_parsed_scorecards                # OCR parsed scorecards into .csv
