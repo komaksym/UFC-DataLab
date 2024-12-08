@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ```bash
 1. To scrape  UFC stats:
 cd scraping/ufc_stats_scraping
-scrapy crawl ufc_spider -O results.json
+scrapy crawl ufc_spider
 
 2. To scrape UFC scorecards:
 cd scraping/ufc_scorecards_scraping
