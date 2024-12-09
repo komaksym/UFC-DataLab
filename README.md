@@ -13,7 +13,9 @@ This repo collects, preprocesses and does EDA on UFC Fight data, including stats
 1. Clone the repository:
 git clone https://github.com/komaksym/UFC_fights_dataset_collection.git
 
-2. Install dependancies:
+2. Create a virtual environment using a tool of your choice
+
+3. Install dependancies:
 pip install -r requirements.txt
 ```
 
@@ -28,6 +30,7 @@ cd scraping/ufc_scorecards_scraping
 scrapy crawl ufc_scorecards
 
 3. To OCR parse the scraped scorecards:
+Move your scraped data to the datasets/scorecards/scraped_scorecard_images/new_version_scorecards/
 python scorecard_OCR/app.py
 ```
 
