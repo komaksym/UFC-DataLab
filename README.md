@@ -55,3 +55,4 @@ python scorecard_OCR/app.py
     └── ufc_stats_scraping                       # Stats scraper
         └── ufcstats_scraping                    # Stats scraper sub-folder
             └── spiders                          # Stats spiders
+```
