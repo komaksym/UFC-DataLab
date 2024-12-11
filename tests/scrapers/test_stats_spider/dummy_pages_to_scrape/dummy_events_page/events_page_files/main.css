@@ -1,0 +1,42 @@
+@import 'bpl-main.css';
+@import 'bpl-normalize.css';
+
+@import 'b-content/b-content.css';
+@import 'b-flag/b-flag.css';
+@import 'b-foot/b-foot.css';
+@import 'b-form/b-form.css';
+@import 'b-head/b-head.css';
+@import 'b-link/b-link.css';
+@import 'b-page/b-page.css';
+@import 'b-socials/b-socials.css';
+@import 'b-tags/b-tags.css';
+@import 'b-top/b-top.css';
+@import 'b-twitter/b-twitter.css';
+
+@import 'pages/blog/b-blog/b-blog.css';
+
+@import 'pages/company/b-articles/b-articles.css';
+@import 'pages/company/b-donation/b-donation.css';
+
+@import 'pages/data/b-data/b-data.css';
+
+@import 'pages/fantasy/b-fantasy/b-fantasy.css';
+
+@import 'pages/fight-details/b-fight-details/b-fight-details.css';
+
+@import 'pages/research/b-research/b-research.css';
+
+@import 'pages/statistics/b-statistics/b-statistics.css';
+
+@import 'pages/home/b-brands/b-brands.css';
+@import 'pages/home/b-products/b-products.css';
+@import 'pages/home/b-provider/b-provider.css';
+@import 'pages/home/b-rating/b-rating.css';
+@import 'pages/home/b-slider/b-slider.css';
+@import 'pages/home/b-table/b-table.css';
+
+@import 'pages/rankings/b-list/b-list.css';
+
+@import 'l-page/l-page.css';
+
+@import 'other.css';
