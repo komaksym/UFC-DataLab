@@ -1,9 +1,9 @@
 import scrapy
-from ..items import ScorecardImagesItem
+from ufc_scorecards_scraping.items import ScorecardImagesItem
 
 
-class ScorecardsSpider(scrapy.Spider):
-    name = "ufc_scorecards"
+class Scorecards_Spider(scrapy.Spider):
+    name = "scorecards_spider"
     allowed_domains = ["www.ufc.com", "cloudfront.net"]
     start_urls = ["https://www.ufc.com/scorecards"]
 

@@ -1,10 +1,10 @@
 import pdb
 import scrapy
-from ..items import FightData
+from ufcstats_scraping.items import FightData
 
 
-class UFCSpider(scrapy.Spider):
-    name = "ufc_spider"
+class Stats_Spider(scrapy.Spider):
+    name = "stats_spider"
     allowed_domains = ["ufcstats.com"]
     start_urls = ["http://ufcstats.com/statistics/events/completed?page=all"]
 

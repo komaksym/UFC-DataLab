@@ -23,11 +23,11 @@ pip install -r requirements.txt
 ```bash
 1. To scrape  UFC stats:
 cd scraping/ufc_stats_scraping
-scrapy crawl ufc_spider
+scrapy crawl stats_spider
 
 2. To scrape UFC scorecards:
 cd scraping/ufc_scorecards_scraping
-scrapy crawl ufc_scorecards
+scrapy crawl scorecards_spider
 
 3. To OCR parse the scraped scorecards:
 Move your scraped data to the datasets/scorecards/scraped_scorecard_images/new_version_scorecards/

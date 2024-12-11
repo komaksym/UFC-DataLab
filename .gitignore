@@ -12,3 +12,8 @@ __pycache__/
 .eda.ipynb.layout
 .virtual_documents/
 .ipynb_checkpoints/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
