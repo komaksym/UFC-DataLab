@@ -58,7 +58,7 @@ class UfcstatsScrapingPipeline:
                 value = " ".join(value.replace("\n", "").split())
             else:
                 value = value.strip()
-            adapter[fieldname] = value if value else "-"
+            adapter[fieldname] = value
             
     def _process_nicknames(self, adapter: ItemAdapter) -> None:
         """Clean fighter nicknames."""
@@ -91,5 +91,5 @@ class UfcstatsScrapingPipeline:
         """Validate critical data fields."""
         required_fields = ['red_fighter_name', 'blue_fighter_name', 'event_name', 'event_date']
         for field in required_fields:
-            if not adapter.get(field) or adapter.get(field) == "-":
+            if not adapter.get(field):
                 logger.warning(f"Missing required field: {field}")

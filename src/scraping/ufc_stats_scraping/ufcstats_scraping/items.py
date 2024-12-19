@@ -6,18 +6,7 @@ import scrapy
 from typing import Dict, Any, Optional
 
 
-class BaseItem(scrapy.Item):
-    """Base class for scraped items with common validation methods."""
-    
-    def clean_field(self, field_name: str) -> None:
-        """Clean individual field values."""
-        if field_name in self:
-            value = self[field_name]
-            if isinstance(value, str):
-                self[field_name] = value.strip()
-
-
-class FightData(BaseItem):
+class FightData(scrapy.Item):
     """Schema for UFC fight data with type hints and documentation."""
     
     # Fight participant information

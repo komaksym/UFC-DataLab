@@ -18,8 +18,8 @@ class Stats_Spider(scrapy.Spider):
         """Extract event data and follow links to individual fights."""
         event_data = {
             "name": response.css("h2.b-content__title span::text").get(),
-            "date": response.xpath("/html/body/section/div/div/div[1]/ul/li[1]/text()").getall()[-1],
-            "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall()[-1]
+            "date": response.xpath("/html/body/section/div/div/div[1]/ul/li[1]/text()").getall(),
+            "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall()
         }
 
         fights_links = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()

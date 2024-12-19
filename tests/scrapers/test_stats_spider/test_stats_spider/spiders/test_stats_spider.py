@@ -38,8 +38,8 @@ class Test_Stats_Spider(scrapy.Spider):
         """Extract event data and follow links to individual fights."""
         event_data = {
             "name": response.css("h2.b-content__title span::text").get(),
-            "date": response.css("li.b-list__box-list-item:nth-child(1)::text").getall()[-1],
-            "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall()[-1]
+            "date": response.css("li.b-list__box-list-item:nth-child(1)::text").getall(),
+            "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall()
         }
         fights_links = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()
 
@@ -128,11 +128,6 @@ class Test_Stats_Spider(scrapy.Spider):
         fight_data_item["blue_fighter_sig_str_clinch_pct"] = response.xpath(f"{detailed_fight_sigstr_pos_base_path}[2]/div/div[2]/div[2]/i[3]/text()").get()
         fight_data_item["red_fighter_sig_str_ground_pct"] = response.xpath(f"{detailed_fight_sigstr_pos_base_path}[2]/div/div[2]/div[3]/i[1]/text()").get()
         fight_data_item["blue_fighter_sig_str_ground_pct"] = response.xpath(f"{detailed_fight_sigstr_pos_base_path}[2]/div/div[2]/div[3]/i[3]/text()").get()
-
-        # Add error handling for critical data
-        if fight_data_item["red_fighter_name"] == "-" or fight_data_item["blue_fighter_name"] == "-":
-            self.logger.error(f"Missing fighter names for fight at URL: {response.url}")
-            return None
 
         yield fight_data_item
 
