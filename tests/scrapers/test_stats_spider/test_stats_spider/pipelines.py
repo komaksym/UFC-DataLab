@@ -95,114 +95,150 @@ class UfcstatsScrapingPipeline:
                 logger.warning(f"Missing required field: {field}")
 
     def _unit_test(self, adapter: ItemAdapter) -> None:
-
-        def _unit_test_fight_participant(self, adapter: ItemAdapter) -> None:
+        def _test_fight_participant(adapter: ItemAdapter) -> None:
             # Unit testing fighter names
             for name in ["red_fighter_name", "blue_fighter_name"]:
-                assert bool(re.match(r"^\w+ \w+$", adapter.get(name))), "Fighter_name test has failed"    
+                assert not bool(re.search(r"\d", adapter[name])), "Fighter nickname test has failed"
+                
+        def _test_general_fight_info(adapter: ItemAdapter) -> None:
+            # Unit testing fight results
+            for result in ["red_fighter_result", "blue_fighter_result"]:
+                assert adapter[result] in ["W", "L"], "Fighter_result test has failed"
 
-            # Unit testing fighter nicknames
-            for name in ['red_fighter_nickname', 'blue_fighter_nickname']:
-                assert bool()
-        """Fight participant information"""
-        
-        
-        # Unit testing fight results
-        for result in ["red_fighter_result", "blue_fighter_result"]:
-            assert adapter[result] in ["W", "L"], "Fighter_result test has failed"
+            # Unit testing fight result method
+            assert adapter['method'] in ['KO/TKO', 'Submission', 'Decision - Unanimous', 'Decision - Split',
+                   "TKO - Doctor's Stoppage", 'Decision - Majority', 'DQ'], "Fight_method test has failed"
+            
+            # Unit testing fight result round
+            assert adapter['round'] in ["1", "2", "3", "4", "5"], "Fight result test has failed"
 
-        # Unit testing fight result method
-        assert adapter['method'] in ['KO/TKO', 'Submission', 'Decision - Unanimous', 'Decision - Split',
-               "TKO - Doctor's Stoppage", 'Decision - Majority', 'DQ'], "Fight_method test has failed"
-        
-        # Unit testing fight round 
-        assert adapter['event_date'] in [1, 2, 3, 4, 5], "Event_date test has failed"
+            # Unit testing fight result time
+            assert ":" in adapter['time'], "Fight result time test has failed"
 
-        # Unit testing event location
-        assert adapter['event_location'] != "-", "Event_location test has failed"
+            # Unit testing fight time format
+            assert adapter['time_format'] in ['3 Rnd (5-5-5)', '3 Rnd + OT (5-5-5-5)', '5 Rnd (5-5-5-5-5)'], \
+                   "Fight time format test has failed"
 
-        # Unit testing red/blue fighter KD
-        assert adapter['red_fighter_KD'].isnumeric() and adapter['blue_fighter_KD'].isnumeric(), \
-               "Red/blue_fighter_KD test has failed"
+            # Unit testing fight referee
+            assert not bool(re.search(r"\d", adapter['referee'])), "Fight referee test has failed"
 
-        # Unit testing red/blue fighter significant strikes
-        assert 'of' in adapter['red_fighter_sig_str'] and 'of' in adapter['blue_fighter_sig_str'], \
-                "Red/blue_fighter_sig_str test has failed"
+            # Unit testing fight bout type
+            assert "bout" in adapter['bout_type'], "Fight bout test has failed"
 
-        # Unit testing red/blue fighter sig str pct
-        assert ("%" in adapter['red_fighter_sig_str_pct'] or "%" in adapter['blue_fighter_sig_str_pct']) \
-               or ("-" in adapter['red_fighter_sig_str_pct'] or "-" in adapter['blue_fighter_sig_str_pct']), \
-               "Red/blue_fighter_sig_str_pct test has failed"
+            # Unit testing fight bonus
+            assert adapter['bonus'] in ['-', 'belt', 'fight', 'perf'], "Fight bonus test has failed"
 
-        # Unit testing red/blue fighter total strikes
-        assert 'of' in adapter['red_fighter_total_str'] and 'of' in adapter['blue_fighter_total_str'], \
-                "Red/blue_fighter_total_str test has failed"
+        def _test_event_info(adapter: ItemAdapter) -> None:
+            # Unit testing event name
+            assert "UFC" in adapter['event_name'], "Event_name test has failed"
+
+            # Unit testing event date
+            assert re.match(r"\d{2}/\d{2}/\d{4}$", adapter['event_date']), "Event date test has failed"
+            
+            # Unit testing event location
+            assert isinstance(adapter['event_location'], str)
+
+        def _test_fight_totals(adapter: ItemAdapter) -> None:
+             # Unit testing fight round 
+            assert adapter['event_date'] in [1, 2, 3, 4, 5], "Event_date test has failed"
+
+            # Unit testing event location
+            assert adapter['event_location'] != "-", "Event_location test has failed"
+
+            # Unit testing red/blue fighter KD
+            assert adapter['red_fighter_KD'].isnumeric() and adapter['blue_fighter_KD'].isnumeric(), \
+                "Red/blue_fighter_KD test has failed"
+
+            # Unit testing red/blue fighter significant strikes
+            assert 'of' in adapter['red_fighter_sig_str'] and 'of' in adapter['blue_fighter_sig_str'], \
+                    "Red/blue_fighter_sig_str test has failed"
+
+            # Unit testing red/blue fighter sig str pct
+            assert ("%" in adapter['red_fighter_sig_str_pct'] or "%" in adapter['blue_fighter_sig_str_pct']) \
+                or ("-" in adapter['red_fighter_sig_str_pct'] or "-" in adapter['blue_fighter_sig_str_pct']), \
+                "Red/blue_fighter_sig_str_pct test has failed"
+
+            # Unit testing red/blue fighter total strikes
+            assert 'of' in adapter['red_fighter_total_str'] and 'of' in adapter['blue_fighter_total_str'], \
+                    "Red/blue_fighter_total_str test has failed"
+            
+            # Unit testing red/blue fighter TD
+            assert 'of' in adapter['red_fighter_TD'] and 'of' in adapter['blue_fighter_TD'], \
+                    "Red/blue_fighter_TD test has failed"
+            
+            # Unit testing red/blue fighter TD pct
+            assert ("%" in adapter['red_fighter_TD_pct'] or "%" in adapter['blue_fighter_TD_pct']) \
+                or ("-" in adapter['red_fighter_TD_pct'] or "-" in adapter['blue_fighter_TD_pct']), \
+                "Red/blue_fighter_TD_pct test has failed"
+            
+            # Unit testing red/blue fighter sub att
+            assert adapter['red_fighter_sub_att'].isnumeric() and adapter['blue_fighter_sub_att'].isnumeric(), \
+                "Red/blue_fighter_sub_att test has failed"
+            
+            # Unit testing red/blue fighter rev
+            assert adapter['red_fighter_rev'].isnumeric() and adapter['blue_fighter_rev'].isnumeric(), \
+                "Red/blue_fighter_rev test has failed"
+            
+            # Unit testing red/blue fighter ctrl
+            assert adapter['red_fighter_ctrl'].isnumeric() and adapter['blue_fighter_ctrl'].isnumeric(), \
+                "Red/blue_fighter_ctrl test has failed"
+
+        def _test_fight_sig_str(adapter: ItemAdapter) -> None:
+            # Unit testing red/blue fighter sig str head
+            assert 'of' in adapter['red_fighter_sig_str_head'] and 'of' in adapter['blue_fighter_sig_str_head'], \
+                    "Red/blue_fighter_sig_str_head test has failed"
+            
+            # Unit testing red/blue fighter sig str body
+            assert 'of' in adapter['red_fighter_sig_str_body'] and 'of' in adapter['blue_fighter_sig_str_body'], \
+                    "Red/blue_fighter_sig_str_body test has failed"
+            
+            # Unit testing red/blue fighter sig str leg
+            assert 'of' in adapter['red_fighter_sig_str_leg'] and 'of' in adapter['blue_fighter_sig_str_leg'], \
+                    "Red/blue_fighter_sig_str_leg test has failed"
+            
+            # Unit testing red/blue fighter sig str distance
+            assert 'of' in adapter['red_fighter_sig_str_distance'] and 'of' in adapter['blue_fighter_sig_str_distance'], \
+                    "Red/blue_fighter_sig_str_distance test has failed"
+            
+            # Unit testing red/blue fighter sig str clinch
+            assert 'of' in adapter['red_fighter_sig_str_clinch'] and 'of' in adapter['blue_fighter_sig_str_clinch'], \
+                    "Red/blue_fighter_sig_str_clinch test has failed"
+            
+            # Unit testing red/blue fighter sig str ground
+            assert 'of' in adapter['red_fighter_sig_str_ground'] and 'of' in adapter['blue_fighter_sig_str_ground'], \
+                    "Red/blue_fighter_sig_str_ground test has failed"
         
-        # Unit testing red/blue fighter TD
-        assert 'of' in adapter['red_fighter_TD'] and 'of' in adapter['blue_fighter_TD'], \
-                "Red/blue_fighter_TD test has failed"
+        def _test_sig_str_by_target(adapter: ItemAdapter) -> None:
+            # Unit testing red/blue fighter sig str head pct
+            assert '%' in adapter['red_fighter_sig_str_head_pct'] and '%' in adapter['blue_fighter_sig_str_head_pct'], \
+                   "Red/blue_fighter_sig_str_head_pct"
         
-        # Unit testing red/blue fighter TD pct
-        assert ("%" in adapter['red_fighter_TD_pct'] or "%" in adapter['blue_fighter_TD_pct']) \
-               or ("-" in adapter['red_fighter_TD_pct'] or "-" in adapter['blue_fighter_TD_pct']), \
-               "Red/blue_fighter_TD_pct test has failed"
+            # Unit testing red/blue fighter sig str body pct
+            assert '%' in adapter['red_fighter_sig_str_body_pct'] and '%' in adapter['blue_fighter_sig_str_body_pct'], \
+                   "Red/blue_fighter_sig_str_body_pct"
         
-        # Unit testing red/blue fighter sub att
-        assert adapter['red_fighter_sub_att'].isnumeric() and adapter['blue_fighter_sub_att'].isnumeric(), \
-               "Red/blue_fighter_sub_att test has failed"
+            # Unit testing red/blue fighter sig str leg pct
+            assert '%' in adapter['red_fighter_sig_str_leg_pct'] and '%' in adapter['blue_fighter_sig_str_leg_pct'], \
+                   "Red/blue_fighter_sig_str_leg_pct"
         
-        # Unit testing red/blue fighter rev
-        assert adapter['red_fighter_rev'].isnumeric() and adapter['blue_fighter_rev'].isnumeric(), \
-               "Red/blue_fighter_rev test has failed"
+        def _test_sig_str_by_position(adapter: ItemAdapter) -> None:
+            # Unit testing red/blue fighter sig str distance pct
+            assert '%' in adapter['red_fighter_sig_str_distance_pct'] and '%' in adapter['blue_fighter_sig_str_distance_pct'], \
+                   "Red/blue_fighter_sig_str_distance_pct"
         
-        # Unit testing red/blue fighter ctrl
-        assert adapter['red_fighter_ctrl'].isnumeric() and adapter['blue_fighter_ctrl'].isnumeric(), \
-               "Red/blue_fighter_ctrl test has failed"
+            # Unit testing red/blue fighter sig str clinch pct
+            assert '%' in adapter['red_fighter_sig_str_clinch_pct'] and '%' in adapter['blue_fighter_sig_str_clinch_pct'], \
+                   "Red/blue_fighter_sig_str_clinch_pct"
         
-        # Unit testing red/blue fighter sig str head
-        assert 'of' in adapter['red_fighter_sig_str_head'] and 'of' in adapter['blue_fighter_sig_str_head'], \
-                "Red/blue_fighter_sig_str_head test has failed"
+            # Unit testing red/blue fighter sig str ground pct
+            assert '%' in adapter['red_fighter_sig_str_ground_pct'] and '%' in adapter['blue_fighter_sig_str_ground_pct'], \
+                   "Red/blue_fighter_sig_str_ground_pct"
         
-        # Unit testing red/blue fighter sig str body
-        assert 'of' in adapter['red_fighter_sig_str_body'] and 'of' in adapter['blue_fighter_sig_str_body'], \
-                "Red/blue_fighter_sig_str_body test has failed"
-        
-        # Unit testing red/blue fighter sig str leg
-        assert 'of' in adapter['red_fighter_sig_str_leg'] and 'of' in adapter['blue_fighter_sig_str_leg'], \
-                "Red/blue_fighter_sig_str_leg test has failed"
-        
-        # Unit testing red/blue fighter sig str distance
-        assert 'of' in adapter['red_fighter_sig_str_distance'] and 'of' in adapter['blue_fighter_sig_str_distance'], \
-                "Red/blue_fighter_sig_str_distance test has failed"
-        
-        # Unit testing red/blue fighter sig str clinch
-        assert 'of' in adapter['red_fighter_sig_str_clinch'] and 'of' in adapter['blue_fighter_sig_str_clinch'], \
-                "Red/blue_fighter_sig_str_clinch test has failed"
-        
-        # Unit testing red/blue fighter sig str ground
-        assert 'of' in adapter['red_fighter_sig_str_ground'] and 'of' in adapter['blue_fighter_sig_str_ground'], \
-                "Red/blue_fighter_sig_str_ground test has failed"
-        
-        # Unit testing red/blue fighter sig str head pct
-        assert '%' in adapter['red_fighter_sig_str_head_pct'] and '%' in adapter['blue_fighter_sig_str_head_pct'], \
-                "Red/blue_fighter_sig_str_head_pct"
-        
-        # Unit testing red/blue fighter sig str body pct
-        assert '%' in adapter['red_fighter_sig_str_body_pct'] and '%' in adapter['blue_fighter_sig_str_body_pct'], \
-                "Red/blue_fighter_sig_str_body_pct"
-        
-        # Unit testing red/blue fighter sig str leg pct
-        assert '%' in adapter['red_fighter_sig_str_leg_pct'] and '%' in adapter['blue_fighter_sig_str_leg_pct'], \
-                "Red/blue_fighter_sig_str_leg_pct"
-        
-        # Unit testing red/blue fighter sig str distance pct
-        assert '%' in adapter['red_fighter_sig_str_distance_pct'] and '%' in adapter['blue_fighter_sig_str_distance_pct'], \
-                "Red/blue_fighter_sig_str_distance_pct"
-        
-        # Unit testing red/blue fighter sig str clinch pct
-        assert '%' in adapter['red_fighter_sig_str_clinch_pct'] and '%' in adapter['blue_fighter_sig_str_clinch_pct'], \
-                "Red/blue_fighter_sig_str_clinch_pct"
-        
-        # Unit testing red/blue fighter sig str ground pct
-        assert '%' in adapter['red_fighter_sig_str_ground_pct'] and '%' in adapter['blue_fighter_sig_str_ground_pct'], \
-                "Red/blue_fighter_sig_str_ground_pct"
+        # Using the methods
+        _test_fight_participant(adapter)
+        _test_general_fight_info(adapter)
+        _test_event_info(adapter)
+        _test_fight_totals(adapter)
+        _test_fight_sig_str(adapter)
+        _test_sig_str_by_target(adapter)
+        _test_sig_str_by_position(adapter)
