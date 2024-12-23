@@ -4,7 +4,7 @@ from test_stats_spider.items import FightData
 
 
 class Test_Stats_Spider(scrapy.Spider):
-    name = "tester"
+    name = "test_stats_spider"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,13 +44,12 @@ class Test_Stats_Spider(scrapy.Spider):
         fights_links = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()
 
         # Checking if event data was parsed
-        assert isinstance(event_data['name'], str) and \
-               len(event_data['name']) > 4, "Event name was not parsed"
+        assert isinstance(event_data['name'], str) and len(event_data['name']) > 4, "Event name was not parsed"
         # Checking if all parsed fights links are indeed links
         assert all(link.startswith("http://ufcstats.com/fight-details/") for link in fights_links)
         
-        return scrapy.Request(url=self.event_paths['single_fight'],
-                              callback=self.parse_fight, meta=event_data, errback=self.handle_error)
+        return scrapy.Request(url=self.event_paths['single_fight'], callback=self.parse_fight,
+                              meta={'event_data': event_data}, errback=self.handle_error)
 
     def parse_fight(self, response):
         """Parse individual fight data using more robust selectors."""
