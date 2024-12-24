@@ -5,7 +5,7 @@
 import scrapy
 
 
-class ScorecardImagesItem(scrapy.Item):
+class ImageItem(scrapy.Item):
     """Item class for storing UFC scorecard image data."""
     image_urls = scrapy.Field()  # List of image URLs to download
     images = scrapy.Field()      # List of downloaded image paths

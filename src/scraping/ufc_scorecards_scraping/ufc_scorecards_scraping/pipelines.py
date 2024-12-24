@@ -17,9 +17,10 @@ class ScorecardImagesPipeline(ImagesPipeline):
         super().__init__(store_url, settings=settings, download_func=download_func)
         self.counter = 0
 
+    # Gets the URLs of the images
     def get_media_requests(self, item, info):
-        # Add logging to debug URL processing
         for image_url in item['image_urls']:
+        # Add logging to debug URL processing
             info.spider.logger.info(f"Requesting image: {image_url}")
             yield scrapy.Request(image_url, meta={"img_index": self.counter}, 
                                  errback=self.handle_error, dont_filter=True)

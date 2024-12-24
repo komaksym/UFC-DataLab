@@ -1,10 +1,11 @@
 import scrapy
 from pathlib import Path
-from test_scorecards_spider.items import ScorecardImagesItem
+from test_scorecards_spider.items import ImageItem
 
 
 class Scorecards_Spider(scrapy.Spider):
     name = "test_scorecards_spider"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -44,29 +45,22 @@ class Scorecards_Spider(scrapy.Spider):
         
     def parse_event(self, response):
         # Robust image extraction with multiple XPath attempts
-        image_paths = [
-            '//*[@id="block-mainpagecontent"]/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/img/@src',
-            '//div[contains(@class, "scorecard-image")]//img/@src',
-            '//img[contains(@class, "scorecard-image")]/@src'
-        ]
+        image_path = '//*[@id="block-mainpagecontent"]/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/img/@src'
         
         # Try multiple XPath expressions to find images
-        image_urls = []
-        for path in image_paths:
-            found_images = response.xpath(path).getall()
-            if found_images:
-                # Unit testing the image links
-                assert all(image.startswith("https://ufc.com/images/") for image in found_images), (
-                "Invalid scorecard image link format. " "Expected: URL starting with 'https://ufc.com/images/'"
-                f"Got: {[image for image in found_images if not image.startswith("https://ufc.com/images/")]}")
-                
-                image_urls.extend(found_images)
-        
-        # Remove duplicates and reverse if needed
-        image_urls = list(set(image_urls))[::-1]
-        
-        # Only yield if images are found
-        if image_urls:
-            scorecards_item = ScorecardImagesItem()
-            scorecards_item['image_urls'] = image_urls
+        found_images = response.xpath(image_path).getall()
+        if found_images:
+            # Unit testing the image links
+            assert all(image.startswith("https://ufc.com/images/") for image in found_images), (
+            "Invalid scorecard image link format. " "Expected: URL starting with 'https://ufc.com/images/'"
+            f"Got: {[image for image in found_images if not image.startswith("https://ufc.com/images/")]}")
+            
+            # Debug log the URLs
+            self.logger.info(f"Found image URLs: {found_images}")
+            
+            scorecards_item = ImageItem()
+            scorecards_item['image_urls'] = found_images
             yield scorecards_item
+
+        else:
+            self.logger.info("No image URLs found in response")

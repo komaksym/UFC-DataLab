@@ -5,7 +5,6 @@
 
 
 # useful for handling different item types with a single interface
-import pdb
 import scrapy
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
@@ -20,15 +19,18 @@ class TestScorecardImagesPipeline(ImagesPipeline):
     # Gets the URLs of the images
     def get_media_requests(self, item, info): 
         for image_url in item['image_urls']:
-            yield scrapy.Request(image_url, meta={"img_index": self.counter})
+            # Logging to debug URL processing
+            info.spider.logger.info(f"Requesting image: {image_url}")
+            yield scrapy.Request(image_url, meta={"img_index": self.counter},
+                                 errback=self.handle_error, dont_filter=True)
             self.counter += 1
 
     # Specifies a custom path & name
     def file_path(self, request, response=None, info=None, *, item=None):
         img_index = request.meta["img_index"]
         # Unit testing the index
-        assert img_index.isdigit(), ("Invalid image index. "
-               "Expected a digit. " f"Got: {img_index}")
+        assert isinstance(img_index, int), ("Invalid image index. "
+               "Expected an integer. " f"Got: {img_index}")
         
         return f"scorecard_images_results/{img_index}.jpg"
 
@@ -42,9 +44,7 @@ class TestScorecardImagesPipeline(ImagesPipeline):
             raise DropItem("Item contains no images")
         adapter = ItemAdapter(item)
         adapter["images"] = image_paths
-        print()
-        print(adapter['images'])
-        print()
-
         return item
-    
+
+    def handle_error(self, error):
+        self.logger.error(f"Image download failed: {error.value}")

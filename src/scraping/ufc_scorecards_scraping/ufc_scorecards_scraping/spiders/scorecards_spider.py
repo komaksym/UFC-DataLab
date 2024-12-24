@@ -1,6 +1,5 @@
 import scrapy
 from ufc_scorecards_scraping.items import ScorecardImagesItem
-import pdb
 
 
 class Scorecards_Spider(scrapy.Spider):
@@ -22,8 +21,7 @@ class Scorecards_Spider(scrapy.Spider):
         
         # If there are multiple next page buttons or a single next page button
         next_page = response.urljoin(next_page_btn)
-        yield scrapy.Request(url=next_page, callback=self.parse, 
-                                meta={'dont_redirect': True})
+        yield scrapy.Request(url=next_page, callback=self.parse)
     
     def parse_event(self, response):
         # Robust image extraction with multiple XPath attempts
