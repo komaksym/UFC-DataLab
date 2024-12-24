@@ -21,7 +21,7 @@ class Stats_Spider(scrapy.Spider):
             "date": response.xpath("/html/body/section/div/div/div[1]/ul/li[1]/text()").getall(),
             "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall()
         }
-
+                                
         fights_links = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()
         for fight_link in fights_links:
             yield scrapy.Request(

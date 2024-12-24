@@ -13,8 +13,8 @@ from scrapy.pipelines.images import ImagesPipeline
 
 
 class ScorecardImagesPipeline(ImagesPipeline):
-    def __init__(self, store_uri, download_func=None, settings=None):
-        super().__init__(store_uri, settings=settings, download_func=download_func)
+    def __init__(self, store_url, download_func=None, settings=None):
+        super().__init__(store_url, settings=settings, download_func=download_func)
         self.counter = 0
 
     # Gets the URLs of the images
@@ -39,4 +39,3 @@ class ScorecardImagesPipeline(ImagesPipeline):
         adapter = ItemAdapter(item)
         adapter["images"] = image_paths
         return item
-    

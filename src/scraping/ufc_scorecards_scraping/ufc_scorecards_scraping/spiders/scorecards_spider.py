@@ -17,13 +17,12 @@ class Scorecards_Spider(scrapy.Spider):
             yield scrapy.Request(url=full_url, callback=self.parse_event)
         
         # Handle pagination more robustly
-        next_page_btns = response.xpath("//a[@title='Load more items']/@href").getall()
+        next_page_btn = response.xpath("//a[@title='Load more items']/@href").get()
         
         # If there are multiple next page buttons or a single next page button
-        for next_page_btn in next_page_btns:
-            next_page = response.urljoin(next_page_btn)
-            yield scrapy.Request(url=next_page, callback=self.parse, 
-                                 meta={'dont_redirect': True, 'handle_httpstatus_list': [302]})
+        next_page = response.urljoin(next_page_btn)
+        yield scrapy.Request(url=next_page, callback=self.parse, 
+                                meta={'dont_redirect': True, 'handle_httpstatus_list': [302]})
     
     def parse_event(self, response):
         # Robust image extraction with multiple XPath attempts
