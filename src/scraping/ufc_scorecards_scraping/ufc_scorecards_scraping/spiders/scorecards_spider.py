@@ -1,5 +1,6 @@
 import scrapy
 from ufc_scorecards_scraping.items import ScorecardImagesItem
+import pdb
 
 
 class Scorecards_Spider(scrapy.Spider):
@@ -22,28 +23,20 @@ class Scorecards_Spider(scrapy.Spider):
         # If there are multiple next page buttons or a single next page button
         next_page = response.urljoin(next_page_btn)
         yield scrapy.Request(url=next_page, callback=self.parse, 
-                                meta={'dont_redirect': True, 'handle_httpstatus_list': [302]})
+                                meta={'dont_redirect': True})
     
     def parse_event(self, response):
         # Robust image extraction with multiple XPath attempts
-        image_paths = [
-            '//*[@id="block-mainpagecontent"]/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/img/@src',
-            '//div[contains(@class, "scorecard-image")]//img/@src',
-            '//img[contains(@class, "scorecard-image")]/@src'
-        ]
+        image_path = '//*[@id="block-mainpagecontent"]/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/img/@src'
         
         # Try multiple XPath expressions to find images
-        image_urls = []
-        for path in image_paths:
-            found_images = response.xpath(path).getall()
-            if found_images:
-                image_urls.extend(found_images)
-        
-        # Remove duplicates and reverse if needed
-        image_urls = list(dict.fromkeys(image_urls))[::-1]
-        
-        # Only yield if images are found
-        if image_urls:
+        found_images = response.xpath(image_path).getall()
+        if found_images:
+            # Debug log the URLs
+            self.logger.info(f"Found image URLs: {found_images}")
+
             scorecards_item = ScorecardImagesItem()
-            scorecards_item['image_urls'] = image_urls
+            scorecards_item['image_urls'] = found_images
             yield scorecards_item
+        else:
+            self.logger.info("No image URLs found in response")
