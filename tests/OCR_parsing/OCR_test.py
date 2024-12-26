@@ -30,10 +30,6 @@ class FightData:
     red_fighter_total_pts: List[str] = None
     blue_fighter_total_pts: List[str] = None
 
-    def __post_init__(self):
-        self.red_fighter_total_pts = [] if self.red_fighter_total_pts is None else self.red_fighter_total_pts
-        self.blue_fighter_total_pts = [] if self.blue_fighter_total_pts is None else self.blue_fighter_total_pts
-
     def to_list(self) -> List:
         """Convert the data class to a list format."""
         return [
@@ -58,7 +54,7 @@ def read_images(folder_path: Path) -> List[str]:
     if not path.exists():
         raise FileNotFoundError(f"Folder not found: {folder_path}")
                                 
-    return [str(file) for file in path.glob("*.jpg")][:10]
+    return [str(file) for file in path.glob("*.jpg")]
     
 
 def extract_date(text: str) -> Optional[str]:
