@@ -57,10 +57,10 @@ class Test_Stats_Spider(scrapy.Spider):
         
         # Checking fight links
         assert all(link.startswith("http://ufcstats.com/fight-details/") 
-                  for link in fights_links), (
-            f"Invalid fight links format. "
-            f"Expected: URLs starting with 'http://ufcstats.com/fight-details/', "
-            f"Got: {[link for link in fights_links if not link.startswith('http://ufcstats.com/fight-details/')]}"
+                   for link in fights_links), (
+                      f"Invalid fight links format. "
+                      f"Expected: URLs starting with 'http://ufcstats.com/fight-details/', "
+                      f"Got: {[link for link in fights_links if not link.startswith('http://ufcstats.com/fight-details/')]}"
         )
         
         return scrapy.Request(url=self.event_paths['single_fight'],

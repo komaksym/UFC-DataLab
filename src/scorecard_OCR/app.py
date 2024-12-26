@@ -58,7 +58,7 @@ def read_images(folder_path: Path) -> List[str]:
     if not path.exists():
         raise FileNotFoundError(f"Folder not found: {folder_path}")
                                 
-    return [str(file) for file in path.glob("*.jpg")][:10]
+    return [str(file) for file in path.glob("*.jpg")
     
 
 def extract_date(text: str) -> Optional[str]:
@@ -101,7 +101,7 @@ def parse_image(image_path: str) -> FightData:
                 elif is_total_text(text):
                     total_points_red = res[idx-1][1][0]
                     total_points_blue = res[idx+1][1][0]
-                    
+                                        
                     if total_points_red.lower() == "total" or total_points_blue.lower() == "total":
                         fight_data.red_fighter_total_pts.append("-")
                         fight_data.blue_fighter_total_pts.append("-")
@@ -161,7 +161,7 @@ def process_scorecards(folder_path: Path, output_path: Path, num_workers: int = 
 if __name__ == "__main__":
     FOLDER_PATH = Path(__file__).resolve().parents[2] / 'src/datasets/scorecards/scraped_scorecard_images/new_version_scorecards/'
     OUTPUT_PATH = Path(__file__).resolve().parents[2] / 'src/datasets/scorecards/OCR_parsed_scorecards/parsed_scorecards_new_version.csv'
-    
+   
     try:
         process_scorecards(FOLDER_PATH, OUTPUT_PATH)
     except Exception as e:

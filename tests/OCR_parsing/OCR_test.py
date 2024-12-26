@@ -30,6 +30,11 @@ class FightData:
     red_fighter_total_pts: List[str] = None
     blue_fighter_total_pts: List[str] = None
 
+    def __post_init__(self):
+        """Keep populating points lists if it's not a first run"""
+        self.red_fighter_total_pts = [] if self.red_fighter_total_pts is None else self.red_fighter_total_pts
+        self.blue_fighter_total_pts = [] if self.blue_fighter_total_pts is None else self.blue_fighter_total_pts
+
     def to_list(self) -> List:
         """Convert the data class to a list format."""
         return [
@@ -40,13 +45,6 @@ class FightData:
             self.blue_fighter_total_pts
         ]
 
-    def is_valid(self) -> bool:
-        """Check if the fight data is valid."""
-        return (len(self.red_fighter_total_pts) == 3 and 
-                len(self.blue_fighter_total_pts) == 3 and 
-                self.red_fighter_name != "-" and 
-                self.blue_fighter_name != "-")
-
 
 def read_images(folder_path: Path) -> List[str]:
     """Read image paths from a folder."""
@@ -55,7 +53,7 @@ def read_images(folder_path: Path) -> List[str]:
         raise FileNotFoundError(f"Folder not found: {folder_path}")
                                 
     return [str(file) for file in path.glob("*.jpg")]
-    
+
 
 def extract_date(text: str) -> Optional[str]:
     """Extract date from text using regex."""
@@ -65,7 +63,8 @@ def extract_date(text: str) -> Optional[str]:
 
 def is_total_text(text: str) -> bool:
     """Check if text represents 'total'."""
-    return sum(1 for w, t in zip(text.lower(), "total") if w != t) < 2 and 4 <= len(text) <= 5
+    return sum(1 for w, t in zip(text.lower(), "total") 
+               if w != t) < 2 and 4 <= len(text) <= 5
 
 
 def parse_image(image_path: str) -> FightData:
@@ -73,7 +72,7 @@ def parse_image(image_path: str) -> FightData:
     try:
         # Initialize OCR inside the worker process
         ocr = PaddleOCR(use_angle_cls=False, lang='en')
-        
+       
         fight_data = FightData()
         result = ocr.ocr(image_path, cls=False)
 
@@ -88,11 +87,11 @@ def parse_image(image_path: str) -> FightData:
                 if text.lower() == "vs.":
                     fight_data.red_fighter_name = res[idx-1][1][0]
                     fight_data.blue_fighter_name = res[idx+1][1][0]
-                
+               
                 # Extract date
                 elif date := extract_date(text):
                     fight_data.date = date
-                
+               
                 # Extract total points
                 elif is_total_text(text):
                     total_points_red = res[idx-1][1][0]
@@ -104,16 +103,55 @@ def parse_image(image_path: str) -> FightData:
                     else:
                         fight_data.red_fighter_total_pts.append(total_points_red)
                         fight_data.blue_fighter_total_pts.append(total_points_blue)
-
-        if not fight_data.is_valid():
-            logging.warning(f"Invalid fight data for image: {image_path}")
-            logging.debug(f"Fight data: {fight_data}")
+                    
+        run_unit_tests(fight_data.red_fighter_total_pts, fight_data.blue_fighter_total_pts,
+                       fight_data.red_fighter_name, fight_data.blue_fighter_name)
 
         return fight_data
 
     except Exception as e:
         logging.error(f"Error processing image {image_path}: {str(e)}")
         return FightData()
+
+
+def test_points_length(red_fighter_total_pts, blue_fighter_total_pts):
+    # Check if the fighter points are valid.
+    assert (len(red_fighter_total_pts) == 3 and 
+            len(blue_fighter_total_pts) == 3), ("Invalid total points length."
+                                                        "Expected: len(red_fighter_total_pts) and \
+                                                        len(blue_fighter_total_pts) == 3",
+                                                        f"Got: {len(red_fighter_total_pts)}\n \
+                                                        {len(blue_fighter_total_pts)}")
+
+
+def test_names(red_fighter_name, blue_fighter_name):
+    # Check if the fighter names are valid.
+    assert (red_fighter_name != "-" and
+            blue_fighter_name != "-")
+
+
+def test_points_values(red_fighter_total_pts, blue_fighter_total_pts):
+    # Unit testing red_fighter_total_pts.
+    invalid_points_red = [f for f in red_fighter_total_pts if f != "-" and not f.isdigit()]
+    assert not invalid_points_red, (
+        "Invalid points format.", 
+        "Expected: red_fighter_total_pts to be either an integer or '-'",
+        f"Got: {invalid_points_red}")
+        
+    # Unit testing blue_fighter_total_pts
+    invalid_points_blue = [f for f in blue_fighter_total_pts if f != "-" and not f.isdigit()]
+    assert not invalid_points_blue, (
+        "Invalid points format.",
+        "Expected: blue_fighter_total_pts to be either an integer or '-'",
+        f"Got: {invalid_points_blue}")
+
+
+def run_unit_tests(red_fighter_total_pts, blue_fighter_total_pts,
+                   red_fighter_name, blue_fighter_name):
+    # Run unit tests.
+    test_points_length(red_fighter_total_pts, blue_fighter_total_pts)
+    test_points_values(red_fighter_total_pts, blue_fighter_total_pts)
+    test_names(red_fighter_name, blue_fighter_name)
 
 
 def process_scorecards(folder_path: Path, output_path: Path, num_workers: int = 8):
