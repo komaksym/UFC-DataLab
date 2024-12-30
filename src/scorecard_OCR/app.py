@@ -1,7 +1,6 @@
-import pdb
 import re
 import logging
-from typing import List, Dict, Tuple, Optional
+from typing import List, Optional
 from dataclasses import dataclass
 from pathlib import Path
 import pandas as pd
@@ -31,6 +30,7 @@ class FightData:
     blue_fighter_total_pts: List[str] = None
 
     def __post_init__(self):
+        """Keep populating points lists if it's not a first run"""
         self.red_fighter_total_pts = [] if self.red_fighter_total_pts is None else self.red_fighter_total_pts
         self.blue_fighter_total_pts = [] if self.blue_fighter_total_pts is None else self.blue_fighter_total_pts
 
@@ -46,9 +46,9 @@ class FightData:
 
     def is_valid(self) -> bool:
         """Check if the fight data is valid."""
-        return (len(self.red_fighter_total_pts) == 3 and 
-                len(self.blue_fighter_total_pts) == 3 and 
-                self.red_fighter_name != "-" and 
+        return (len(self.red_fighter_total_pts) == 3 and
+                len(self.blue_fighter_total_pts) == 3 and
+                self.red_fighter_name != "-" and
                 self.blue_fighter_name != "-")
 
 
@@ -58,7 +58,7 @@ def read_images(folder_path: Path) -> List[str]:
     if not path.exists():
         raise FileNotFoundError(f"Folder not found: {folder_path}")
                                 
-    return [str(file) for file in path.glob("*.jpg")
+    return [str(file) for file in path.glob("*.jpg")][:10]
     
 
 def extract_date(text: str) -> Optional[str]:
@@ -70,6 +70,29 @@ def extract_date(text: str) -> Optional[str]:
 def is_total_text(text: str) -> bool:
     """Check if text represents 'total'."""
     return sum(1 for w, t in zip(text.lower(), "total") if w != t) < 2 and 4 <= len(text) <= 5
+
+
+def save_results(collected_results, save_path):
+    """Specifying the process of saving the OCR-parsed data"""
+    # Create DataFrame
+    results_df = pd.DataFrame(
+        collected_results,
+        columns=[
+            "red_fighter_name",
+            "blue_fighter_name",
+            "date",
+            "red_fighter_total_pts",
+            "blue_fighter_total_pts"
+        ]
+    )
+
+    # Save results in the next path
+    output_path = Path(save_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    results_df.to_csv(output_path, index=False)
+    logging.info(f"Results saved to {output_path}")
+
+    return results_df
 
 
 def parse_image(image_path: str) -> FightData:
@@ -102,6 +125,7 @@ def parse_image(image_path: str) -> FightData:
                     total_points_red = res[idx-1][1][0]
                     total_points_blue = res[idx+1][1][0]
                                         
+                    # If total points are absent (Sometimes total points are not present)
                     if total_points_red.lower() == "total" or total_points_blue.lower() == "total":
                         fight_data.red_fighter_total_pts.append("-")
                         fight_data.blue_fighter_total_pts.append("-")
@@ -129,27 +153,11 @@ def process_scorecards(folder_path: Path, output_path: Path, num_workers: int = 
         collected_results = []
         with Pool(num_workers) as pool:
             for result in tqdm(pool.imap(parse_image, images), 
-                               total=len(images), 
-                               desc="Processing images"):
+                               total=len(images), desc="Processing images"):
                 collected_results.append(result.to_list())
 
-        # Create DataFrame
-        results_df = pd.DataFrame(
-            collected_results,
-            columns=[
-                "red_fighter_name",
-                "blue_fighter_name",
-                "date",
-                "red_fighter_total_pts",
-                "blue_fighter_total_pts"
-            ]
-        )
-
-        # Save results
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        results_df.to_csv(output_path, index=False)
-        logging.info(f"Results saved to {output_path}")
+        # Saving results
+        results_df = save_results(collected_results, output_path)
 
         return results_df
 
@@ -159,6 +167,7 @@ def process_scorecards(folder_path: Path, output_path: Path, num_workers: int = 
 
 
 if __name__ == "__main__":
+    """Define input & output paths"""
     FOLDER_PATH = Path(__file__).resolve().parents[2] / 'src/datasets/scorecards/scraped_scorecard_images/new_version_scorecards/'
     OUTPUT_PATH = Path(__file__).resolve().parents[2] / 'src/datasets/scorecards/OCR_parsed_scorecards/parsed_scorecards_new_version.csv'
    
