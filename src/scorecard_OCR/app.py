@@ -7,17 +7,12 @@ import pandas as pd
 from paddleocr import PaddleOCR
 from tqdm import tqdm
 from multiprocessing import Pool
+from config import PathConfig
+from dataclasses import field
 
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('scorecard_parser.log', mode='w', encoding='utf-8'),
-        logging.StreamHandler()
-    ]
-)
+# CONSTANTS
+DEFAULT_NUM_WORKERS = 8
 
 
 @dataclass
@@ -26,13 +21,8 @@ class FightData:
     red_fighter_name: str = "-"
     blue_fighter_name: str = "-"
     date: str = "-"
-    red_fighter_total_pts: List[str] = None
-    blue_fighter_total_pts: List[str] = None
-
-    def __post_init__(self):
-        """Keep populating points lists if it's not a first run"""
-        self.red_fighter_total_pts = [] if self.red_fighter_total_pts is None else self.red_fighter_total_pts
-        self.blue_fighter_total_pts = [] if self.blue_fighter_total_pts is None else self.blue_fighter_total_pts
+    red_fighter_total_pts: List[str] = field(default_factory=list)
+    blue_fighter_total_pts: List[str] = field(default_factory=list)
 
     def to_list(self) -> List:
         """Convert the data class to a list format."""
@@ -43,13 +33,68 @@ class FightData:
             self.red_fighter_total_pts,
             self.blue_fighter_total_pts
         ]
+    
+    def validate(self) -> bool:
+        """Validate fight data"""
+        try:
+            # Basic validation rules
+            if len(self.red_fighter_total_pts) != 3 or len(self.blue_fighter_total_pts) != 3:
+                return False
+            if self.red_fighter_name == "-" or self.blue_fighter_name == "-":
+                return False
+            if not all(p.isdigit() or p == "-" for p in self.red_fighter_total_pts + self.blue_fighter_total_pts):
+                return False
+            return True
+        
+        except Exception as e:
+            logging.error(f"Validation failed: {str(e)}")
+            return False
 
-    def is_valid(self) -> bool:
-        """Check if the fight data is valid."""
-        return (len(self.red_fighter_total_pts) == 3 and
-                len(self.blue_fighter_total_pts) == 3 and
-                self.red_fighter_name != "-" and
-                self.blue_fighter_name != "-")
+
+def parse_image(image_path: str) -> FightData:
+    """Parsing the image."""
+    try:
+        # Defining ocr engine object
+        ocr = PaddleOCR(use_angle_cls=False, lang='en')
+        result = ocr.ocr(image_path, cls=False)
+
+        # Fight data object
+        fight_data = FightData()
+
+        if not result:
+            raise ValueError(f"No OCR results for image: {image_path}")
+
+        for res in result:
+            for idx, item in enumerate(res):
+                text = item[1][0]
+                # Extract fighter names
+                if text.lower() == "vs.":
+                    fight_data.red_fighter_name = res[idx-1][1][0]
+                    fight_data.blue_fighter_name = res[idx+1][1][0]
+            
+                # Extract date
+                elif date := extract_date(text):
+                    fight_data.date = date
+            
+                # Extract total points
+                elif is_total_text(text):
+                    total_points_red = res[idx-1][1][0]
+                    total_points_blue = res[idx+1][1][0]
+                    
+                    if total_points_red.lower() == "total" or total_points_blue.lower() == "total":
+                        fight_data.red_fighter_total_pts.append("-")
+                        fight_data.blue_fighter_total_pts.append("-")
+                    else:
+                        fight_data.red_fighter_total_pts.append(total_points_red)
+                        fight_data.blue_fighter_total_pts.append(total_points_blue)
+                    
+        if not fight_data.validate():
+            raise ValueError("Fight data validation failed.")
+
+        return fight_data
+
+    except Exception as e:
+        raise ValueError(f"Error processing {image_path}: {str(e)}")
 
 
 def read_images(folder_path: Path) -> List[str]:
@@ -57,9 +102,9 @@ def read_images(folder_path: Path) -> List[str]:
     path = Path(folder_path)
     if not path.exists():
         raise FileNotFoundError(f"Folder not found: {folder_path}")
-                                
+                              
     return [str(file) for file in path.glob("*.jpg")][:10]
-    
+
 
 def extract_date(text: str) -> Optional[str]:
     """Extract date from text using regex."""
@@ -69,12 +114,13 @@ def extract_date(text: str) -> Optional[str]:
 
 def is_total_text(text: str) -> bool:
     """Check if text represents 'total'."""
-    return sum(1 for w, t in zip(text.lower(), "total") if w != t) < 2 and 4 <= len(text) <= 5
+    return sum(1 for w, t in zip(text.lower(), "total") 
+               if w != t) < 2 and 4 <= len(text) <= 5
 
 
 def save_results(collected_results, save_path):
-    """Specifying the process of saving the OCR-parsed data"""
-    # Create DataFrame
+    """Create a container where the results will be stored
+       and specify the Path"""
     results_df = pd.DataFrame(
         collected_results,
         columns=[
@@ -86,7 +132,7 @@ def save_results(collected_results, save_path):
         ]
     )
 
-    # Save results in the next path
+    # Path, output directory, save
     output_path = Path(save_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     results_df.to_csv(output_path, index=False)
@@ -95,71 +141,28 @@ def save_results(collected_results, save_path):
     return results_df
 
 
-def parse_image(image_path: str) -> FightData:
-    """Parse a single image and extract fight data."""
-    try:
-        # Initialize OCR inside the worker process
-        ocr = PaddleOCR(use_angle_cls=False, lang='en')
-        
-        fight_data = FightData()
-        result = ocr.ocr(image_path, cls=False)
-
-        if not result:
-            logging.warning(f"No OCR results for image: {image_path}")
-            return fight_data
-
-        for res in result:
-            for idx, item in enumerate(res):
-                text = item[1][0]
-                # Extract fighter names
-                if text.lower() == "vs.":
-                    fight_data.red_fighter_name = res[idx-1][1][0]
-                    fight_data.blue_fighter_name = res[idx+1][1][0]
-                
-                # Extract date
-                elif date := extract_date(text):
-                    fight_data.date = date
-                
-                # Extract total points
-                elif is_total_text(text):
-                    total_points_red = res[idx-1][1][0]
-                    total_points_blue = res[idx+1][1][0]
-                                        
-                    # If total points are absent (Sometimes total points are not present)
-                    if total_points_red.lower() == "total" or total_points_blue.lower() == "total":
-                        fight_data.red_fighter_total_pts.append("-")
-                        fight_data.blue_fighter_total_pts.append("-")
-                    else:
-                        fight_data.red_fighter_total_pts.append(total_points_red)
-                        fight_data.blue_fighter_total_pts.append(total_points_blue)
-
-        if not fight_data.is_valid():
-            logging.warning(f"Invalid fight data for image: {image_path}")
-            logging.debug(f"Fight data: {fight_data}")
-
-        return fight_data
-
-    except Exception as e:
-        logging.error(f"Error processing image {image_path}: {str(e)}")
-        return FightData()
-
-
-def process_scorecards(folder_path: Path, output_path: Path, num_workers: int = 8):
+def process_scorecards(folder_path: Path, output_path: Path, 
+                       num_workers: int = DEFAULT_NUM_WORKERS):
     """Main function to process scorecard images."""
     try:
-        images = read_images(folder_path)
-        logging.info(f"Found {len(images)} images to process")
+        try:
+            images = read_images(folder_path)
+            logging.info(f"Found {len(images)} images to process")
+
+        except Exception:
+            raise ValueError(f"Error reading images at {folder_path}")
 
         collected_results = []
+        
         with Pool(num_workers) as pool:
             for result in tqdm(pool.imap(parse_image, images), 
                                total=len(images), desc="Processing images"):
-                collected_results.append(result.to_list())
 
+                # Process results as they complete
+                collected_results.append(result)
+                
         # Saving results
-        results_df = save_results(collected_results, output_path)
-
-        return results_df
+        save_results(collected_results, output_path)
 
     except Exception as e:
         logging.error(f"Error in main processing: {str(e)}")
@@ -167,11 +170,10 @@ def process_scorecards(folder_path: Path, output_path: Path, num_workers: int = 
 
 
 if __name__ == "__main__":
-    """Define input & output paths"""
-    FOLDER_PATH = Path(__file__).resolve().parents[2] / 'src/datasets/scorecards/scraped_scorecard_images/new_version_scorecards/'
-    OUTPUT_PATH = Path(__file__).resolve().parents[2] / 'src/datasets/scorecards/OCR_parsed_scorecards/parsed_scorecards_new_version.csv'
-   
     try:
-        process_scorecards(FOLDER_PATH, OUTPUT_PATH)
+        path_config = PathConfig()
+        path_config.validate_paths()
+        process_scorecards(path_config.INPUT_PATH, path_config.OUTPUT_PATH)
+
     except Exception as e:
-        logging.error(f"Error parsing I/O PATHs {FOLDER_PATH}, {OUTPUT_PATH}: {str(e)}")
+        logging.error(f"Application failed: {e}")
