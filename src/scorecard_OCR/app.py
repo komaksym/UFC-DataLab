@@ -7,7 +7,7 @@ import pandas as pd
 from paddleocr import PaddleOCR
 from tqdm import tqdm
 from multiprocessing import Pool
-from config import PathConfig
+from src.scorecard_OCR.config import PathConfig
 from dataclasses import field
 
 
@@ -91,6 +91,7 @@ def parse_image(image_path: str) -> FightData:
         if not fight_data.validate():
             raise ValueError("Fight data validation failed.")
 
+        print(f"Fight data:\n{fight_data}\n")
         return fight_data
 
     except Exception as e:
@@ -162,7 +163,7 @@ def process_scorecards(folder_path: Path, output_path: Path,
                 collected_results.append(result)
                 
         # Saving results
-        save_results(collected_results, output_path)
+        return save_results(collected_results, output_path)
 
     except Exception as e:
         logging.error(f"Error in main processing: {str(e)}")
