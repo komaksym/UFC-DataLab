@@ -91,7 +91,6 @@ def parse_image(image_path: str) -> FightData:
         if not fight_data.validate():
             raise ValueError("Fight data validation failed.")
 
-        print(f"Fight data:\n{fight_data}\n")
         return fight_data
 
     except Exception as e:
@@ -100,11 +99,7 @@ def parse_image(image_path: str) -> FightData:
 
 def read_images(folder_path: Path) -> List[str]:
     """Read image paths from a folder."""
-    path = Path(folder_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Folder not found: {folder_path}")
-                              
-    return [str(file) for file in path.glob("*.jpg")][:10]
+    return [str(file) for file in folder_path.glob("*.jpg")][:10]
 
 
 def extract_date(text: str) -> Optional[str]:
@@ -142,16 +137,17 @@ def save_results(collected_results, save_path):
     return results_df
 
 
-def process_scorecards(folder_path: Path, output_path: Path, 
+def process_scorecards(input_path: Path, output_path: Path, 
                        num_workers: int = DEFAULT_NUM_WORKERS):
     """Main function to process scorecard images."""
     try:
         try:
-            images = read_images(folder_path)
+            images = read_images(input_path)
+            print(images)
             logging.info(f"Found {len(images)} images to process")
 
         except Exception:
-            raise ValueError(f"Error reading images at {folder_path}")
+            raise ValueError(f"Error reading images at {input_path}")
 
         collected_results = []
         
