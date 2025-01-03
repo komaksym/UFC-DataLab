@@ -8,7 +8,9 @@ from src.scorecard_OCR.app import (process_scorecards, read_images,
 
 class TestFightData():
     """Tests on Fight Data class"""
-    fight = FightData()
+
+    def setup_method(self):
+        self.fight = FightData()
 
     def test_initialization(self):
         """Test __init__ method"""

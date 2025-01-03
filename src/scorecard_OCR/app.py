@@ -99,7 +99,7 @@ def parse_image(image_path: str) -> FightData:
 
 def read_images(folder_path: Path) -> List[str]:
     """Read image paths from a folder."""
-    return [str(file) for file in folder_path.glob("*.jpg")][:10]
+    return [str(file) for file in folder_path.glob("*.jpg")]
 
 
 def extract_date(text: str) -> Optional[str]:
