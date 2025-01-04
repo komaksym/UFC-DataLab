@@ -1,6 +1,6 @@
-import pdb
 import scrapy
-from ufcstats_scraping.items import FightData
+from ..items import FightData
+import pdb
 
 
 class Stats_Spider(scrapy.Spider):

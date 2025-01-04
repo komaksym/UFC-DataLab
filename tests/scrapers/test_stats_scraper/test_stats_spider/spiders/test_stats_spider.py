@@ -13,17 +13,17 @@ class Test_Stats_Spider(scrapy.Spider):
         def create_file_url(relative_path):
             full_path = Path(__file__).parents[2] / relative_path
             return f"file://{full_path.resolve()}"
-        
+      
         # Storing mock pages
         self.event_paths = {
             'events_page': create_file_url("dummy_pages_to_scrape/dummy_events_page/events_page.html"),
             'single_event': create_file_url("dummy_pages_to_scrape/dummy_event_page/single_event_page.html"),
             'single_fight': create_file_url("dummy_pages_to_scrape/dummy_fight_page/fight_page.html")
         }     
-    
+  
         self.start_urls = [self.event_paths['events_page']]
                            
-    def parse(self, response):
+    def test_parse(self, response):
         """Extract and follow links to all UFC events."""
         events_links = response.css("a.b-link.b-link_style_black::attr(href)").getall()
 
@@ -39,7 +39,7 @@ class Test_Stats_Spider(scrapy.Spider):
                             callback=self.parse_event, 
                             errback=self.handle_error)
 
-    def parse_event(self, response):
+    def test_parse_event(self, response):
         """Extract event data and follow links to individual fights."""
         event_data = {
             "name": response.css("h2.b-content__title span::text").get(),
@@ -68,7 +68,7 @@ class Test_Stats_Spider(scrapy.Spider):
                             meta={'event_data': event_data}, 
                             errback=self.handle_error)
 
-    def parse_fight(self, response):
+    def test_parse_fight(self, response):
         """Parse individual fight data using more robust selectors."""
         event_data = response.meta["event_data"]
         fight_data_item = FightData()

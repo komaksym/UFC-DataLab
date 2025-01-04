@@ -6,7 +6,7 @@ from src.scorecard_OCR.app import (process_scorecards, read_images,
                                    parse_image, FightData)
 
 
-class TestFightData():
+class TestFightData:
     """Tests on Fight Data class"""
 
     def setup_method(self):
