@@ -1,0 +1,1 @@
+from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping.spiders.scorecards_spider import Scorecards_Spider

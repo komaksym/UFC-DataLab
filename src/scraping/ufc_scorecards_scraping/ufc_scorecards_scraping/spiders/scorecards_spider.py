@@ -1,5 +1,5 @@
 import scrapy
-from ufc_scorecards_scraping.items import ScorecardImagesItem
+from ..items import ScorecardImagesItem
 
 
 class Scorecards_Spider(scrapy.Spider):
