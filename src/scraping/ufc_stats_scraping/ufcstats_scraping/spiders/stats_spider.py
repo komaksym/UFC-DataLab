@@ -1,6 +1,5 @@
 import scrapy
 from ..items import FightData
-import pdb
 
 
 class Stats_Spider(scrapy.Spider):
@@ -10,7 +9,7 @@ class Stats_Spider(scrapy.Spider):
 
     def parse(self, response):
         """Extract and follow links to all UFC events."""
-        events_links = response.css("a.b-link.b-link_style_black::attr(href)").getall()
+        events_links = response.css("a.b-link.b-link_style_black::attr(href)").getall()[:2]
         for event_link in events_links:
             yield scrapy.Request(url=event_link, callback=self.parse_event)
 
@@ -22,7 +21,7 @@ class Stats_Spider(scrapy.Spider):
             "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall()
         }
                                 
-        fights_links = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()
+        fights_links = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()[:2]
         for fight_link in fights_links:
             yield scrapy.Request(
                 url=fight_link, 
@@ -50,7 +49,7 @@ class Stats_Spider(scrapy.Spider):
         fight_data_item["referee"] = response.xpath(f"{general_fight_base_path}[2]/div[2]/p[1]/i[5]/span/text()").get()
         fight_data_item["details"] = response.xpath("//p[@class='b-fight-details__text'][2]//text()[normalize-space() and not (contains(., 'Details:'))]").getall()
         fight_data_item["bout_type"] = response.xpath(f"{general_fight_base_path}[2]/div[1]/i/text()").getall()[-1]
-        fight_data_item["bonus"] = response.xpath(f"{general_fight_base_path}[2]/div[1]/i/img/@src").get()
+        fight_data_item["bonus"] = response.xpath(f"{general_fight_base_path}[2]/div[1]/i/img/@src").get("-")
         
         # Event data
         fight_data_item['event_name'] = event_data["name"]

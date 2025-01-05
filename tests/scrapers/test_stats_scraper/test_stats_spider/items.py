@@ -4,7 +4,7 @@
 # https://docs.scrapy.org/en/latest/topics/items.html
 import scrapy
 from typing import Dict, Any, Optional
-
+    
 
 class FightData(scrapy.Item):
     """Schema for UFC fight data with type hints and documentation."""
