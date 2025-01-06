@@ -10,19 +10,18 @@ class Scorecards_Spider(scrapy.Spider):
     def parse(self, response):
         # Extract event links from the current page
         event_links = response.xpath('//*[@id="block-mainpagecontent"]/div/div/div[3]/div/div/a/@href').getall()
-        
         # Process each event link
         for event_link in event_links:
             full_url = response.urljoin(event_link)
             yield scrapy.Request(url=full_url, callback=self.parse_event)
-        
+       
         # Handle pagination more robustly
         next_page_btn = response.xpath("//a[@title='Load more items']/@href").get()
-        
         # If there are multiple next page buttons or a single next page button
         next_page = response.urljoin(next_page_btn)
+
         yield scrapy.Request(url=next_page, callback=self.parse)
-    
+   
     def parse_event(self, response):
         # Robust image extraction with multiple XPath attempts
         image_path = '//*[@id="block-mainpagecontent"]/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/img/@src'

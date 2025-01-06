@@ -5,7 +5,6 @@
 
 
 # useful for handling different item types with a single interface
-import pdb
 import scrapy
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
@@ -20,7 +19,7 @@ class ScorecardImagesPipeline(ImagesPipeline):
     # Gets the URLs of the images
     def get_media_requests(self, item, info):
         for image_url in item['image_urls']:
-        # Add logging to debug URL processing
+            # Add logging to debug URL processing
             info.spider.logger.info(f"Requesting image: {image_url}")
             yield scrapy.Request(image_url, meta={"img_index": self.counter}, 
                                  errback=self.handle_error, dont_filter=True)
