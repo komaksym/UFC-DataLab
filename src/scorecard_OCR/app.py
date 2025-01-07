@@ -97,7 +97,7 @@ def parse_image(image_path: str) -> FightData:
         raise ValueError(f"Error processing {image_path}: {str(e)}")
 
 
-def read_images(folder_path: Path) -> List[str]:
+def read_images(folder_path: Path) -> [str]:
     """Read image paths from a folder."""
     return [str(file) for file in folder_path.glob("*.jpg")]
 

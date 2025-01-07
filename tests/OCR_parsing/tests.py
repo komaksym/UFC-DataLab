@@ -1,7 +1,5 @@
 import pytest
-from typing import List
 from config import PathConfig
-from pathlib import Path
 from src.scorecard_OCR.app import (process_scorecards, read_images,
                                    parse_image, FightData)
 
@@ -14,15 +12,17 @@ class TestFightData:
 
     def test_initialization(self):
         """Test __init__ method"""
-        assert self.fight.red_fighter_name == "-"
-        assert self.fight.blue_fighter_name == "-"
-        assert self.fight.date == "-"
-        assert self.fight.red_fighter_total_pts == []
-        assert self.fight.blue_fighter_total_pts == []
+        assert self.fight.red_fighter_name == "-", "Red fighter name should be initialized as '-'"
+        assert self.fight.blue_fighter_name == "-", "Blue fighter name should be initialized as '-'"
+        assert self.fight.date == "-", "Date should be initialized as '-'"
+        assert self.fight.red_fighter_total_pts == [], "Red fighter points should be initialized as empty list"
+        assert self.fight.blue_fighter_total_pts == [], "Blue fighter points should be initialized as empty list"
     
     def test_to_list(self):
         """Test to_list method"""
-        assert isinstance(self.fight.to_list(), list) and len(self.fight.to_list()) == 5
+        result = self.fight.to_list()
+        assert isinstance(result, list), "to_list() should return a list"
+        assert len(result) == 5, "to_list() should return 5 elements"
 
     @pytest.fixture
     def mock_data(self):
@@ -35,7 +35,7 @@ class TestFightData:
     
     def test_validation(self, mock_data):
         """Testing validation function"""
-        assert self.fight.validate()
+        assert self.fight.validate(), "Fight data validation method failed.\nExpected: True.\nGot: False."
 
 
 @pytest.fixture
@@ -61,7 +61,7 @@ def mock_scorecard_image(mock_scorecard_path):
 
 def test_read_images(mock_scorecard_path):
     """Testing read_images function"""
-    assert read_images(mock_scorecard_path)[0].endswith('.jpg')
+    assert read_images(mock_scorecard_path)[0].endswith('.jpg'), "Image path should end with .jpg extension"
 
 
 def test_parse_image(mock_scorecard_image):
@@ -70,14 +70,14 @@ def test_parse_image(mock_scorecard_image):
     fight_data = parse_image(*mock_scorecard_image)
 
     # Running tests
-    assert fight_data.red_fighter_name == 'BRANDON MORENO'
-    assert fight_data.blue_fighter_name == 'AMIR ALBAZI'
-    assert fight_data.date == '11/02/2024'
-    assert fight_data.red_fighter_total_pts == ['49', '50', '50']
-    assert fight_data.blue_fighter_total_pts == ['46', '45', '45']
+    assert fight_data.red_fighter_name == 'BRANDON MORENO', "Red fighter name not correctly parsed"
+    assert fight_data.blue_fighter_name == 'AMIR ALBAZI', "Blue fighter name not correctly parsed"
+    assert fight_data.date == '11/02/2024', "Fight date not correctly parsed"
+    assert fight_data.red_fighter_total_pts == ['49', '50', '50'], "Red fighter points not correctly parsed"
+    assert fight_data.blue_fighter_total_pts == ['46', '45', '45'], "Blue fighter points not correctly parsed"
 
 
 def test_process_scorecards(mock_scorecard_path, mock_output_path):
     """Testing process scorecards"""
     resulting_df = process_scorecards(mock_scorecard_path, mock_output_path)
-    assert resulting_df.shape == (1, 5)
+    assert resulting_df.shape == (1, 5), "Resulting DataFrame should have 1 row and 5 columns"
