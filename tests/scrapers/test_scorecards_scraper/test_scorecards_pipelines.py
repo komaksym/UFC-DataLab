@@ -8,7 +8,17 @@ import scrapy
 
 
 class TestScorecardImagesPipeline():
+    """Test suite for the UFC Scorecard Images Pipeline.
+    
+    Tests the pipeline's ability to:
+    - Process image URLs
+    - Generate correct file paths
+    - Handle image downloads
+    - Process completed items
+    """
+
     def setup_method(self):
+        """Initialize pipeline and test items before each test."""
         self.pipeline = ScorecardImagesPipeline("downloaded_images")
         self.item = ScorecardImagesItem()
         self.item_processed = ScorecardImagesItem()
@@ -23,6 +33,7 @@ class TestScorecardImagesPipeline():
 
     @pytest.fixture
     def mock_urls_raw(self):
+        """Fixture providing sample image URLs for testing."""
         self.item['image_urls'] = ['https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_rodriguez-def-knutsson.png?itok=jvvraYfK',
                                     'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_grant-def-taveras.png?itok=8F0l_pQB',
                                     'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_maverick-def-horth.png?itok=Ek0Zj8M2',
@@ -38,27 +49,57 @@ class TestScorecardImagesPipeline():
                                     'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_buckley-def-covington.png?itok=-n6FjYei']
     
     def test_get_media_requests(self, mock_urls_raw):
+        """Test media request generation from image URLs.
+        
+        Verifies that:
+        - Correct number of requests are generated
+        - All requests are valid scrapy.Request objects
+        """
         responses = list(self.pipeline.get_media_requests(self.item, self.info))
-
-        assert all(isinstance(response, scrapy.Request) for response in responses)
+        assert all(isinstance(response, scrapy.Request) for response in responses), (
+            "All responses should be instances of scrapy.Request"
+        )
 
     def test_file_path(self):
+        """Test file path generation for downloaded images.
+        
+        Verifies that:
+        - Correct file path format is generated
+        - Index is properly incorporated into filename
+        """
         response = self.pipeline.file_path(scrapy.Request(self.mock_scorecard,
                                                           meta={"img_index": 0}))
-        assert response == 'downloaded_images/0.jpg'
+        assert response == 'downloaded_images/0.jpg', (
+            f"Incorrect file path generated.\n"
+            f"Expected: downloaded_images/0.jpg\n"
+            f"Got: {response}"
+        )
 
     @pytest.fixture
     def mock_item_raw(self):
+        """Fixture providing raw item data before processing."""
         self.mock_results = [(True, {'url': 'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_rodriguez-def-knutsson.png?itok=jvvraYfK', 'path': 'downloaded_images/0.jpg', 'checksum': '58190df6c026d020f4f7f71a9ef18a9d', 'status': 'uptodate'})]
         self.item['image_urls'] = 'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_rodriguez-def-knutsson.png?itok=jvvraYfK'
 
     @pytest.fixture
     def mock_item_processed(self):
+        """Fixture providing expected processed item data."""
         self.item_processed['image_urls'] = 'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_rodriguez-def-knutsson.png?itok=jvvraYfK'
         self.item_processed['images'] = ['downloaded_images/0.jpg']
 
     def test_item_completed(self, mock_item_raw, mock_item_processed):
+        """Test item completion processing.
+        
+        Verifies that:
+        - Results are properly processed
+        - Item is correctly updated with download paths
+        - Output matches expected processed item
+        """
         response = self.pipeline.item_completed(self.mock_results,
                                                 self.item,
                                                 self.info)
-        assert response == self.item_processed
+        assert response == self.item_processed, (
+            f"Item processing failed.\n"
+            f"Expected: {self.item_processed}\n"
+            f"Got: {response}"
+        )
