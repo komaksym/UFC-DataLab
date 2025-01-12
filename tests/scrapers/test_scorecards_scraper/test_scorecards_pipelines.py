@@ -1,8 +1,11 @@
 import pytest
 import scrapy.pipelines
-from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping.pipelines import ScorecardImagesPipeline
-from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping.items import ScorecardImagesItem
-from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping.spiders.scorecards_spider import Scorecards_Spider
+from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping. \
+     pipelines import ScorecardImagesPipeline
+from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping. \
+     items import ScorecardImagesItem
+from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping. \
+     spiders.scorecards_spider import Scorecards_Spider
 from pathlib import Path
 import scrapy
 
@@ -57,7 +60,9 @@ class TestScorecardImagesPipeline():
         """
         responses = list(self.pipeline.get_media_requests(self.item, self.info))
         assert all(isinstance(response, scrapy.Request) for response in responses), (
-            "All responses should be instances of scrapy.Request"
+            "Incorrect response type\n"
+            "Expected: all responses of type scrapy.Request"
+            f"Got: {[type(r) for r in responses]}"
         )
 
     def test_file_path(self):

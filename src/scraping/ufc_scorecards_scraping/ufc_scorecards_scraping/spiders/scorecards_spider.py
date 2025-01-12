@@ -19,7 +19,6 @@ class Scorecards_Spider(scrapy.Spider):
         next_page_btn = response.xpath("//a[@title='Load more items']/@href").get()
         # If there are multiple next page buttons or a single next page button
         next_page = response.urljoin(next_page_btn)
-
         yield scrapy.Request(url=next_page, callback=self.parse)
    
     def parse_event(self, response):

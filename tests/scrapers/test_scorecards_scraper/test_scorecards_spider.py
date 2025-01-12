@@ -8,7 +8,7 @@ from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping. \
 
 class TestScorecardSpider():
     """Test suite for the UFC Scorecards Spider.
-    
+
     Tests the spider's ability to:
     - Parse event listing pages
     - Extract scorecard image URLs from event pages
@@ -21,25 +21,23 @@ class TestScorecardSpider():
 
         def create_full_path(relative_path):
             """Method for finding paths to mock pages"""
-            full_path = Path(__file__).parents[0] / relative_path
+            full_path = Path(__file__).parents[0] / "mock_pages/" / relative_path
             return full_path.resolve()
-        
+
         # Storing mock pages
         self.mock_pages = {
-            'events_page': create_full_path("mock_pages/mock_events_page/ \
-                                            events_page.html"),
-            'single_event': create_full_path("mock_pages/mock_event_page/ \
-                                             event_page.html"),
+            'events_page': create_full_path("mock_events_page/events_page.html"),
+            'single_event': create_full_path("mock_event_page/event_page.html")
         }     
 
         self.start_url = self.mock_pages['events_page']
 
     def mock_response(self, path):
         """Create a mock HtmlResponse object for testing.
-        
+
         Args:
             path (str): Path to the mock HTML file
-            
+
         Returns:
             HtmlResponse: A mock response object containing the HTML content
         """
@@ -55,7 +53,7 @@ class TestScorecardSpider():
         response = HtmlResponse(url=url, request=request, body=html_content, encoding='utf-8')
 
         return response
-    
+
     @pytest.fixture
     def mock_expected_links(self):
         """Fixture providing expected links for pagination testing."""
@@ -66,29 +64,30 @@ class TestScorecardSpider():
                          'file:///news/official-judges-scorecards-ufc-fight-night-magny-vs-prates-vegas-100',
                          'file:///news/official-judges-scorecards-ufc-edmonton-moreno-vs-albazi',
                          'file:///Users/koval/dev/UFC_DataLab/tests/scrapers/test_scorecards_scraper/mock_pages/mock_events_page/events_page.html?page=1']
-        
-        return mock_expected        
+
+        return mock_expected 
 
     def test_parse(self, mock_expected_links):
         """Test the main parse method for correct link extraction 
            and pagination.
-        
+
         Verifies that the spider correctly:
         - Extracts all event page links
         - Includes the next page link for pagination
         """
         yielded_responses = self.spider.parse(self.mock_response(self.start_url))
+        
         unpacked_responses = [response.url for response in list(yielded_responses)]
         assert unpacked_responses == mock_expected_links, (
             f"Spider failed to extract correct links.\n"
             f"Expected: {mock_expected_links}\n"
             f"Got: {unpacked_responses}"
         )
-    
+
     @pytest.fixture
     def mock_expected_images(self):
         """Fixture providing expected image URLs from a scorecard event page."""
-        mock_expected = ['https://ufc.com/images/styles/inline/s3/024-11/UFC%20309%20Jones%20vs.%20Miocic%20-%20Scorecards%20-%20Hardy%20vs.%20Moura%20copy.jpg?itok=Zi5TPB4c',
+        mock_expected = ['https://ufc.com/images/styles/inline/s3/2024-11/UFC%20309%20Jones%20vs.%20Miocic%20-%20Scorecards%20-%20Hardy%20vs.%20Moura%20copy.jpg?itok=Zi5TPB4c',
                          'https://ufc.com/images/styles/inline/s3/2024-11/1UFC_309_Jones_vs__Miocic_-_Scorecards_-_Hafez_vs__Elliott_pdf-copy.jpg?itok=WU5n2pHh',
                          'https://ufc.com/images/styles/inline/s3/2024-11/2UFC_309_Jones_vs__Miocic_-_Scorecards_-_Gall_vs__Brahimaj_pdfcopy.jpg?itok=kJsYLStO',
                          'https://ufc.com/images/styles/inline/s3/2024-11/3UFC_309_Jones_vs__Miocic_-_Scorecards_-_Tybura_vs__Diniz_pdf%20copy.jpg?itok=4dvGm6S9',
@@ -104,7 +103,7 @@ class TestScorecardSpider():
 
     def test_parse_event(self, mock_expected_images):
         """Test the event page parser for correct image URL extraction.
-        
+
         Verifies that the spider correctly:
         - Extracts all scorecard image URLs from an event page
         - Maintains the correct order of scorecards

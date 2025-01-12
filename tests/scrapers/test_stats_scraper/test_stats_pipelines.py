@@ -6,15 +6,25 @@ from itemadapter import ItemAdapter
 
 
 class TestStatsPipeline:
-    """Testing the stats scraping pipeline"""
+    """Test suite for the UFC Stats Pipeline.
+    
+    Tests the pipeline's ability to:
+    - Clean and format text fields
+    - Process fighter nicknames
+    - Handle bonus information
+    - Convert percentage values
+    - Validate fight data
+    """
 
     def setup_method(self):
+        """Initialize pipeline and test items before each test."""
         self.pipeline = StatsPipeline()
         self.fight_data_raw = FightData()
         self.fight_data_processed = FightData()
 
     @pytest.fixture
     def mock_item_raw(self):
+        """Fixture providing raw unprocessed fight data."""
         self.fight_data_raw['red_fighter_name'] = 'Colby Covington '
         self.fight_data_raw['blue_fighter_name'] = 'Joaquin Buckley '
         self.fight_data_raw['red_fighter_nickname'] = '\n      "Chaos"\n    '
@@ -77,6 +87,7 @@ class TestStatsPipeline:
 
     @pytest.fixture
     def mock_item_processed(self):
+        """Fixture providing expected processed fight data."""
         self.fight_data_processed['blue_fighter_KD'] = '0'
         self.fight_data_processed['blue_fighter_TD'] = '0 of 1'
         self.fight_data_processed['blue_fighter_TD_pct'] = '0%'
@@ -138,12 +149,19 @@ class TestStatsPipeline:
         self.fight_data_processed['time_format'] = '5 Rnd (5-5-5-5-5)'
         
     def test_clean_text_fields(self, mock_item_raw, mock_item_processed):
-        """Testing the clean_text_fields method"""
-
-        # Passing the raw data to the pipeline method
+        """Test text field cleaning and formatting.
+        
+        Verifies that:
+        - Whitespace is properly stripped
+        - Special characters are handled correctly
+        - Text formatting is consistent
+        """
         self.pipeline.clean_text_fields(ItemAdapter(self.fight_data_raw))
-        # Checking whether the results meet the requirements
-        assert self.fight_data_raw == self.fight_data_processed
+        assert self.fight_data_raw == self.fight_data_processed, (
+            f"Text cleaning failed.\n"
+            f"Expected: {self.fight_data_processed}\n"
+            f"Got: {self.fight_data_raw}"
+        )
 
     @pytest.fixture
     def mock_nicknames_raw(self):
@@ -155,14 +173,19 @@ class TestStatsPipeline:
         self.fight_data_processed['red_fighter_nickname'] = 'Chaos'
         self.fight_data_processed['blue_fighter_nickname'] = 'New Mansa'
 
-    def test_process_nicknames(self, mock_nicknames_raw, 
-                               mock_nicknames_processed):
-        """Testing the process_nicknames method"""
-
-        # Passing the raw data to the pipeline method
+    def test_process_nicknames(self, mock_nicknames_raw, mock_nicknames_processed):
+        """Test fighter nickname processing.
+        
+        Verifies that:
+        - Quotes are properly removed
+        - Formatting is consistent
+        """
         self.pipeline.process_nicknames(ItemAdapter(self.fight_data_raw))
-        # Checking whether the results meet the requirements
-        assert self.fight_data_raw == self.fight_data_processed
+        assert self.fight_data_raw == self.fight_data_processed, (
+            f"Nickname processing failed.\n"
+            f"Expected: {self.fight_data_processed}\n"
+            f"Got: {self.fight_data_raw}"
+        )
 
     @pytest.fixture
     def mock_bonus_raw(self):
@@ -173,12 +196,18 @@ class TestStatsPipeline:
         self.fight_data_processed['bonus'] = 'belt'
         
     def test_process_bonus(self, mock_bonus_raw, mock_bonus_processed):
-        """Testing the process_bonus method"""
-
-        # Passing the raw data to the pipeline method
+        """Test bonus information processing.
+        
+        Verifies that:
+        - Bonus URLs are correctly parsed
+        - Bonus types are properly extracted
+        """
         self.pipeline.process_bonus(ItemAdapter(self.fight_data_raw))
-        # Checking whether the results meet the requirements
-        assert self.fight_data_raw == self.fight_data_processed
+        assert self.fight_data_raw == self.fight_data_processed, (
+            f"Bonus processing failed.\n"
+            f"Expected: {self.fight_data_processed}\n"
+            f"Got: {self.fight_data_raw}"
+        )
         
     @pytest.fixture
     def mock_pct_raw(self):
@@ -219,12 +248,18 @@ class TestStatsPipeline:
         self.fight_data_processed['red_fighter_sig_str_pct'] = '55.0'
 
     def test_convert_percentages(self, mock_pct_raw, mock_pct_processed):
-        """Testing the convert_percentages method"""
-
-        # Passing the raw data to the pipeline method
+        """Test percentage value conversion.
+        
+        Verifies that:
+        - Percentage symbols are removed
+        - Values are converted to proper format
+        """
         self.pipeline.convert_percentages(ItemAdapter(self.fight_data_raw))
-        # Checking whether the results meet the requirements
-        assert self.fight_data_raw == self.fight_data_processed
+        assert self.fight_data_raw == self.fight_data_processed, (
+            f"Percentage conversion failed.\n"
+            f"Expected: {self.fight_data_processed}\n"
+            f"Got: {self.fight_data_raw}"
+        )
         
     @pytest.fixture
     def mock_invalid_data(self):
@@ -234,8 +269,15 @@ class TestStatsPipeline:
         self.fight_data_raw['event_date'] = "-"
 
     def test_validate_data(self, mock_invalid_data):
-        """Testing the validate_data method"""
-        assert not self.pipeline.validate_data(ItemAdapter(self.fight_data_raw))
+        """Test fight data validation.
+        
+        Verifies that:
+        - Invalid data is properly detected
+        - Required fields are checked
+        """
+        assert not self.pipeline.validate_data(ItemAdapter(self.fight_data_raw)), (
+            "Validation should fail for invalid data"
+        )
 
     @pytest.fixture
     def mock_item_final_processed(self):
@@ -300,9 +342,15 @@ class TestStatsPipeline:
         self.fight_data_processed['time_format'] = '5 Rnd (5-5-5-5-5)'
 
     def test_process_item(self, mock_item_raw, mock_item_final_processed):
-        """Testing the process_item method"""
-
-        # Passing the raw data to the pipeline method
+        """Test complete item processing pipeline.
+        
+        Verifies that:
+        - All processing steps are applied correctly
+        - Final output matches expected format
+        """
         self.pipeline.process_item(self.fight_data_raw, Stats_Spider)
-        # Checking whether the results meet the requirements
-        assert self.fight_data_raw == self.fight_data_processed
+        assert self.fight_data_raw == self.fight_data_processed, (
+            f"Complete pipeline processing failed.\n"
+            f"Expected: {self.fight_data_processed}\n"
+            f"Got: {self.fight_data_raw}"
+        )
