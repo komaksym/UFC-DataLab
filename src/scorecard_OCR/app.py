@@ -97,9 +97,9 @@ def parse_image(image_path: str) -> FightData:
         raise ValueError(f"Error processing {image_path}: {str(e)}")
 
 
-def read_images(folder_path: Path) -> [str]:
+def read_images(folder_path: Path) -> List[str]:
     """Read image paths from a folder."""
-    return [str(file) for file in folder_path.glob("*.jpg")]
+    return [str(file) for file in folder_path.glob("*.jpg")][:5]
 
 
 def extract_date(text: str) -> Optional[str]:
@@ -114,7 +114,8 @@ def is_total_text(text: str) -> bool:
                if w != t) < 2 and 4 <= len(text) <= 5
 
 
-def save_results(collected_results, save_path):
+def save_results(collected_results: List[FightData],
+                 save_path: Path) -> pd.DataFrame:
     """Create a container where the results will be stored
        and specify the Path"""
     results_df = pd.DataFrame(
@@ -138,7 +139,7 @@ def save_results(collected_results, save_path):
 
 
 def process_scorecards(input_path: Path, output_path: Path, 
-                       num_workers: int = DEFAULT_NUM_WORKERS):
+                       num_workers: int = DEFAULT_NUM_WORKERS) -> pd.DataFrame:
     """Main function to process scorecard images."""
     try:
         try:
@@ -168,7 +169,7 @@ def process_scorecards(input_path: Path, output_path: Path,
 
 if __name__ == "__main__":
     try:
-        path_config = PathConfig()
+        path_config: PathConfig = PathConfig()
         path_config.validate_paths()
         process_scorecards(path_config.INPUT_PATH, path_config.OUTPUT_PATH)
 
