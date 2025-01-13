@@ -1,27 +1,46 @@
 import scrapy
+from typing import List, Iterator, Optional, Dict, Any
+from scrapy.http import Response, Request
+from twisted.python.failure import Failure
 from ..items import FightData
 
 
 class Stats_Spider(scrapy.Spider):
-    name = "stats_spider"
-    allowed_domains = ["ufcstats.com"]
-    start_urls = ["http://ufcstats.com/statistics/events/completed?page=all"]
+    """Spider for scraping UFC fight statistics."""
+    
+    name: str = "stats_spider"
+    allowed_domains: List[str] = ["ufcstats.com"]
+    start_urls: List[str] = ["http://ufcstats.com/statistics/events/completed?page=all"]
 
-    def parse(self, response):
-        """Extract and follow links to all UFC events."""
-        events_links = response.css("a.b-link.b-link_style_black::attr(href)").getall()[:2]
+    def parse(self, response: Response) -> Iterator[Request]:
+        """Extract and follow links to all UFC events.
+        
+        Args:
+            response: The response containing the events page HTML
+            
+        Returns:
+            Iterator of Requests to event pages
+        """
+        events_links: List[str] = response.css("a.b-link.b-link_style_black::attr(href)").getall()
         for event_link in events_links:
             yield scrapy.Request(url=event_link, callback=self.parse_event)
 
-    def parse_event(self, response):
-        """Extract event data and follow links to individual fights."""
-        event_data = {
+    def parse_event(self, response: Response) -> Iterator[Request]:
+        """Extract event data and follow links to individual fights.
+        
+        Args:
+            response: The response containing the event page HTML
+            
+        Returns:
+            Iterator of Requests to fight pages with event metadata
+        """
+        event_data: Dict[str, Any] = {
             "name": response.css("h2.b-content__title span::text").get(),
             "date": response.xpath("/html/body/section/div/div/div[1]/ul/li[1]/text()").getall(),
             "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall()
         }
                                 
-        fights_links = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()[:2]
+        fights_links: List[str] = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()
         for fight_link in fights_links:
             yield scrapy.Request(
                 url=fight_link, 
@@ -30,10 +49,17 @@ class Stats_Spider(scrapy.Spider):
                 errback=self.handle_error
             )
 
-    def parse_fight(self, response):
-        """Parse individual fight data using more robust selectors."""
-        event_data = response.meta["event_data"]
-        fight_data_item = FightData()
+    def parse_fight(self, response: Response) -> Optional[FightData]:
+        """Parse individual fight data using xpath selectors.
+        
+        Args:
+            response: The response containing the fight page HTML
+            
+        Returns:
+            FightData item containing all fight statistics or None if critical data missing
+        """
+        event_data: Dict[str, Any] = response.meta["event_data"]
+        fight_data_item: FightData = FightData()
         general_fight_base_path = "/html/body/section/div/div/div"
         
         fight_data_item["red_fighter_name"] = response.xpath(f"{general_fight_base_path}[1]/div[1]/div/h3/a/text()").get()
@@ -114,7 +140,11 @@ class Stats_Spider(scrapy.Spider):
 
         yield fight_data_item
 
-    def handle_error(self, failure):
-        """Handle request failures."""
+    def handle_error(self, failure: Failure) -> None:
+        """Handle request failures.
+        
+        Args:
+            failure: The Failure object containing error details
+        """
         self.logger.error(f"Request failed: {failure.request.url}")
         self.logger.error(f"Error: {failure.value}")

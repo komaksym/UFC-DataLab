@@ -5,11 +5,10 @@
 
 
 # useful for handling different item types with a single interface
-import pdb
 from itemadapter import ItemAdapter
 import re
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 logger = logging.getLogger(__name__)

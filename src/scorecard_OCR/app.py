@@ -33,7 +33,7 @@ class FightData:
             self.red_fighter_total_pts,
             self.blue_fighter_total_pts
         ]
-    
+   
     def validate(self) -> bool:
         """Validate fight data"""
         try:
@@ -45,7 +45,7 @@ class FightData:
             if not all(p.isdigit() or p == "-" for p in self.red_fighter_total_pts + self.blue_fighter_total_pts):
                 return False
             return True
-        
+
         except Exception as e:
             logging.error(f"Validation failed: {str(e)}")
             return False
@@ -71,23 +71,23 @@ def parse_image(image_path: str) -> FightData:
                 if text.lower() == "vs.":
                     fight_data.red_fighter_name = res[idx-1][1][0]
                     fight_data.blue_fighter_name = res[idx+1][1][0]
-            
+ 
                 # Extract date
                 elif date := extract_date(text):
                     fight_data.date = date
-            
+       
                 # Extract total points
                 elif is_total_text(text):
                     total_points_red = res[idx-1][1][0]
                     total_points_blue = res[idx+1][1][0]
-                    
+                  
                     if total_points_red.lower() == "total" or total_points_blue.lower() == "total":
                         fight_data.red_fighter_total_pts.append("-")
                         fight_data.blue_fighter_total_pts.append("-")
                     else:
                         fight_data.red_fighter_total_pts.append(total_points_red)
                         fight_data.blue_fighter_total_pts.append(total_points_blue)
-                    
+                 
         if not fight_data.validate():
             raise ValueError("Fight data validation failed.")
 
@@ -99,7 +99,7 @@ def parse_image(image_path: str) -> FightData:
 
 def read_images(folder_path: Path) -> List[str]:
     """Read image paths from a folder."""
-    return [str(file) for file in folder_path.glob("*.jpg")][:5]
+    return [str(file) for file in folder_path.glob("*.jpg")]
 
 
 def extract_date(text: str) -> Optional[str]:

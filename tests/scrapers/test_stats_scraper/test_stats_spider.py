@@ -1,25 +1,21 @@
-import pytest
 import scrapy
+import pytest
+from typing import Dict, Any, Optional, List, Iterator
 from pathlib import Path
-from scrapy.http import HtmlResponse
+from scrapy.http import HtmlResponse, Request
 from src.scraping.ufc_stats_scraping.ufcstats_scraping.spiders.stats_spider import Stats_Spider
 from src.scraping.ufc_stats_scraping.ufcstats_scraping.items import FightData
 
 
 class TestStatsSpider:
-    """Test suite for the UFC Stats Spider.
-    
-    Tests the spider's ability to:
-    - Parse event listing pages
-    - Extract fight data from event pages
-    - Process individual fight details
-    """
+    """Test suite for the UFC Stats Spider."""
 
-    def setup_method(self):
-        """Initialize spider and set up mock data paths before each test."""
-        self.spider = Stats_Spider()
+    def setup_method(self) -> None:
+        self.spider: Stats_Spider = Stats_Spider()
+        self.mock_pages: Dict[str, Path]
+        self.start_urls: Path
 
-        def create_full_path(relative_path):
+        def create_full_path(relative_path: str) -> Path:
             """Method for finding paths to mock pages"""
             full_path = Path(__file__).parents[0] / relative_path
             return full_path.resolve()
@@ -33,7 +29,7 @@ class TestStatsSpider:
 
         self.start_urls = self.mock_pages['events_page']
 
-    def mock_response(self, path, metadata=None):
+    def mock_response(self, path: str, metadata: Optional[Dict[str, Any]] = None) -> HtmlResponse:
         """Create a mock HtmlResponse object for testing.
         
         Args:
@@ -60,14 +56,14 @@ class TestStatsSpider:
 
         return response
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         """Test the main parse method for correct event link extraction.
         
         Verifies that:
         - All extracted links are valid event URLs
         - Links follow the expected UFC Stats format
         """
-        responses = self.spider.parse(self.mock_response(self.start_urls))
+        responses: Iterator[Request] = self.spider.parse(self.mock_response(self.start_urls))
         assert all(response.url.startswith("http://ufcstats.com/event-details/") 
                for response in responses), (
             f"Invalid event links detected.\n"
@@ -76,12 +72,12 @@ class TestStatsSpider:
         )
 
     @pytest.fixture
-    def mock_metadata(self):
+    def mock_metadata(self) -> Dict[str, Dict[str, Any]]:
         """Fixture providing sample event metadata for testing."""
         metadata = {'event_data': {'name': '\n              UFC 309: Jones vs. Miocic\n            ', 'date': ['\n      ', '\n      November 16, 2024\n    '], 'location': ['\n      ', '\n\n      New York City, New York, USA\n    ']}}
         return metadata
 
-    def test_parse_event(self, mock_metadata):
+    def test_parse_event(self, mock_metadata: Dict[str, Dict[str, Any]]) -> None:
         """Test event page parsing for correct fight link extraction.
         
         Verifies that:
@@ -89,7 +85,7 @@ class TestStatsSpider:
         - All fight links are valid URLs
         - Links maintain expected format
         """
-        responses = list(self.spider.parse_event(
+        responses: List[Request] = list(self.spider.parse_event(
             self.mock_response(self.mock_pages['single_event'])
         ))
 
@@ -106,14 +102,14 @@ class TestStatsSpider:
             f"Invalid URLs: {[r.url for r in responses if not r.url.startswith('http://ufcstats.com/fight-details/')]}"
         )
 
-    def test_parse_fight(self, mock_metadata):
+    def test_parse_fight(self, mock_metadata: Dict[str, Dict[str, Any]]) -> None:
         """Test individual fight page parsing.
         
         Verifies that:
         - Fight data is correctly extracted
         - Output is properly formatted as FightData item
         """
-        response = list(self.spider.parse_fight(
+        response: List[FightData] = list(self.spider.parse_fight(
             self.mock_response(self.mock_pages['single_fight'], mock_metadata)
         ))
         

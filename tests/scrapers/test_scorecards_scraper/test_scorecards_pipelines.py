@@ -1,33 +1,28 @@
 import pytest
 import scrapy.pipelines
-from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping. \
-     pipelines import ScorecardImagesPipeline
-from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping. \
-     items import ScorecardImagesItem
+from typing import List, Dict, Any, Tuple, Optional
+from pathlib import Path
+from scrapy.http import Request
+from src.scraping.ufc_scorecards_scraping. \
+     ufc_scorecards_scraping.pipelines import ScorecardImagesPipeline
+from src.scraping.ufc_scorecards_scraping. \
+     ufc_scorecards_scraping.items import ScorecardImagesItem
 from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping. \
      spiders.scorecards_spider import Scorecards_Spider
-from pathlib import Path
-import scrapy
 
 
-class TestScorecardImagesPipeline():
-    """Test suite for the UFC Scorecard Images Pipeline.
-    
-    Tests the pipeline's ability to:
-    - Process image URLs
-    - Generate correct file paths
-    - Handle image downloads
-    - Process completed items
-    """
+class TestScorecardImagesPipeline:
+    def setup_method(self) -> None:
+        self.pipeline: ScorecardImagesPipeline = ScorecardImagesPipeline("downloaded_images")
+        self.item: ScorecardImagesItem = ScorecardImagesItem()
+        self.item_processed: ScorecardImagesItem = ScorecardImagesItem()
+        self.info: scrapy.pipelines.media.MediaPipeline.SpiderInfo = \
+            scrapy.pipelines.media.MediaPipeline.SpiderInfo(Scorecards_Spider())
 
-    def setup_method(self):
-        """Initialize pipeline and test items before each test."""
-        self.pipeline = ScorecardImagesPipeline("downloaded_images")
-        self.item = ScorecardImagesItem()
-        self.item_processed = ScorecardImagesItem()
-        self.info = scrapy.pipelines.media.MediaPipeline.SpiderInfo(Scorecards_Spider())
+        self.mock_scorecard: str
+        self.mock_results: List[Tuple[bool, Dict[str, str]]]
 
-        def create_full_path(relative_path):
+        def create_full_path(relative_path: str) -> str:
             """Method for finding paths to mock pages"""
             full_path = Path(__file__).parents[0] / relative_path
             return f"file://{full_path.resolve()}"
@@ -35,8 +30,7 @@ class TestScorecardImagesPipeline():
         self.mock_scorecard = create_full_path('mock_pages/mock_scorecard/mock_scorecard.avif')
 
     @pytest.fixture
-    def mock_urls_raw(self):
-        """Fixture providing sample image URLs for testing."""
+    def mock_urls_raw(self) -> None:
         self.item['image_urls'] = ['https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_rodriguez-def-knutsson.png?itok=jvvraYfK',
                                     'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_grant-def-taveras.png?itok=8F0l_pQB',
                                     'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_maverick-def-horth.png?itok=Ek0Zj8M2',
@@ -51,60 +45,27 @@ class TestScorecardImagesPipeline():
                                     'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_swanson-def-quarantillo.png?itok=TXw-FZWN',
                                     'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_buckley-def-covington.png?itok=-n6FjYei']
     
-    def test_get_media_requests(self, mock_urls_raw):
-        """Test media request generation from image URLs.
-        
-        Verifies that:
-        - Correct number of requests are generated
-        - All requests are valid scrapy.Request objects
-        """
-        responses = list(self.pipeline.get_media_requests(self.item, self.info))
-        assert all(isinstance(response, scrapy.Request) for response in responses), (
-            "Incorrect response type\n"
-            "Expected: all responses of type scrapy.Request"
-            f"Got: {[type(r) for r in responses]}"
-        )
+    def test_get_media_requests(self, mock_urls_raw: None) -> None:
+        responses: List[Request] = list(self.pipeline.get_media_requests(self.item, self.info))
 
-    def test_file_path(self):
-        """Test file path generation for downloaded images.
-        
-        Verifies that:
-        - Correct file path format is generated
-        - Index is properly incorporated into filename
-        """
-        response = self.pipeline.file_path(scrapy.Request(self.mock_scorecard,
-                                                          meta={"img_index": 0}))
-        assert response == 'downloaded_images/0.jpg', (
-            f"Incorrect file path generated.\n"
-            f"Expected: downloaded_images/0.jpg\n"
-            f"Got: {response}"
-        )
+        assert all(isinstance(response, scrapy.Request) for response in responses)
+
+    def test_file_path(self) -> None:
+        response: str = self.pipeline.file_path(scrapy.Request(self.mock_scorecard,
+                                                               meta={"img_index": 0}))
+        assert response == 'downloaded_images/0.jpg'
 
     @pytest.fixture
-    def mock_item_raw(self):
-        """Fixture providing raw item data before processing."""
+    def mock_item_raw(self) -> None:
         self.mock_results = [(True, {'url': 'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_rodriguez-def-knutsson.png?itok=jvvraYfK', 'path': 'downloaded_images/0.jpg', 'checksum': '58190df6c026d020f4f7f71a9ef18a9d', 'status': 'uptodate'})]
         self.item['image_urls'] = 'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_rodriguez-def-knutsson.png?itok=jvvraYfK'
 
     @pytest.fixture
-    def mock_item_processed(self):
-        """Fixture providing expected processed item data."""
+    def mock_item_processed(self) -> None:
         self.item_processed['image_urls'] = 'https://ufc.com/images/styles/inline/s3/2024-12/121424-ufc-fight-night-tampa-scorecards_rodriguez-def-knutsson.png?itok=jvvraYfK'
         self.item_processed['images'] = ['downloaded_images/0.jpg']
 
-    def test_item_completed(self, mock_item_raw, mock_item_processed):
-        """Test item completion processing.
-        
-        Verifies that:
-        - Results are properly processed
-        - Item is correctly updated with download paths
-        - Output matches expected processed item
-        """
-        response = self.pipeline.item_completed(self.mock_results,
-                                                self.item,
-                                                self.info)
-        assert response == self.item_processed, (
-            f"Item processing failed.\n"
-            f"Expected: {self.item_processed}\n"
-            f"Got: {response}"
-        )
+    def test_item_completed(self, mock_item_raw: None, mock_item_processed: None) -> ScorecardImagesItem:
+        response: ScorecardImagesItem = self.pipeline.item_completed(
+            self.mock_results, self.item, self.info)
+        assert response == self.item_processed

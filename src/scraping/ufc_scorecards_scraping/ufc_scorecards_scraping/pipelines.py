@@ -6,6 +6,7 @@
 
 # useful for handling different item types with a single interface
 import scrapy
+from scrapy.http import Request
 from itemadapter import ItemAdapter
 from typing import Iterator, List, Tuple
 from scrapy.exceptions import DropItem
@@ -21,23 +22,21 @@ class ScorecardImagesPipeline(ImagesPipeline):
 
     # Gets the URLs of the images
     def get_media_requests(self, item: ScorecardImagesItem, 
-                           info: scrapy.pipelines.media.MediaPipeline.SpiderInfo) \
-                           -> Iterator[scrapy.Request]:
+                           info: scrapy.pipelines.media.MediaPipeline.SpiderInfo) -> Iterator[Request]:
         for image_url in item['image_urls']:
             # Add logging to debug URL processing
             info.spider.logger.info(f"Requesting image: {image_url}")
-            yield scrapy.Request(image_url, meta={"img_index": self.counter}, 
-                                 errback=self.handle_error, dont_filter=True)
+            yield Request(image_url, meta={"img_index": self.counter}, 
+                          errback=self.handle_error, dont_filter=True)
             self.counter += 1
 
-    def file_path(self, request: scrapy.Request, response=None, info=None, *, item=None) -> str:
+    def file_path(self, request: Request, response=None, info=None, *, item=None) -> str:
         img_index: int = request.meta["img_index"]
         return f"downloaded_images/{img_index}.jpg"
 
-    def item_completed(self, results: List[Tuple[bool, dict]],
-                       item: ScorecardImagesItem,
+    def item_completed(self, results: List[Tuple[bool, dict]], item: ScorecardImagesItem,
                        info: scrapy.pipelines.media.MediaPipeline.SpiderInfo) \
-                       -> ScorecardImagesItem:
+                        -> ScorecardImagesItem:
         """
         Is called when all image requests for an item are completed
         """

@@ -1,4 +1,5 @@
 import scrapy
+from scrapy.http import Request, Response
 from typing import List, Iterator
 from src.scraping.ufc_scorecards_scraping. \
      ufc_scorecards_scraping.items import ScorecardImagesItem
@@ -9,10 +10,10 @@ class Scorecards_Spider(scrapy.Spider):
     allowed_domains: List[str] = ["www.ufc.com", "cloudfront.net"]
     start_urls: List[str] = ["https://www.ufc.com/scorecards"]
 
-    def parse(self, response: scrapy.http.response.html.HtmlResponse) \
-            -> Iterator[scrapy.Request]:
+    def parse(self, response: Response) \
+            -> Iterator[Request]:
         # Extract event links from the current page
-        event_links: List[str] = response.xpath('//*[@id="block-mainpagecontent"]/div/div/div[3]/div/div/a/@href').getall()[:2]
+        event_links: List[str] = response.xpath('//*[@id="block-mainpagecontent"]/div/div/div[3]/div/div/a/@href').getall()
         # Process each event link
         for event_link in event_links:
             full_url: str = response.urljoin(event_link)
@@ -25,7 +26,7 @@ class Scorecards_Spider(scrapy.Spider):
         next_page: str = response.urljoin(next_page_btn)
         yield scrapy.Request(url=next_page, callback=self.parse)
    
-    def parse_event(self, response: scrapy.http.response.html.HtmlResponse) \
+    def parse_event(self, response: Response) \
             -> Iterator[ScorecardImagesItem]:
         # Robust image extraction with multiple XPath attempts
         image_path: str = '//*[@id="block-mainpagecontent"]/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/img/@src'
