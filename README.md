@@ -44,31 +44,31 @@ pytest
 ├── src                                        # Source files
 │   ├── EDA                                    # Exploratory Data Analysis
 │   ├── datasets                               # Datasets
-│   │   ├── merged_stats_n_scorecards          # Scraped scorecards data
-│   │   ├── scorecards                           
-│   │   │   ├── OCR_parsed_scorecards
-│   │   │   └── scraped_scorecard_images
-│   │   └── stats
-│   ├── scorecard_OCR
-│   └── scraping
-│       ├── ufc_scorecards_scraping
-│       │   └── ufc_scorecards_scraping
-│       │       └── spiders
-│       └── ufc_stats_scraping
-│           └── ufcstats_scraping
-│               └── spiders
-└── tests
-    ├── OCR_parsing
-    │   └── mock_scorecard
-    └── scrapers
-        ├── test_scorecards_scraper
-        │   └── mock_pages
-        │       ├── mock_event_page
-        │       ├── mock_events_page
-        │       └── mock_scorecard
-        └── test_stats_scraper
-            └── mock_pages
-                ├── mock_event_page
-                ├── mock_events_page
-                └── mock_fight_page.
+│   │   ├── merged_stats_n_scorecards          # Merged stats and scorecards dataset
+│   │   ├── scorecards                         # Scorecards data
+│   │   │   ├── OCR_parsed_scorecards          # OCR parsed scorecards
+│   │   │   └── scraped_scorecard_images       # Scraped scorecards
+│   │   └── stats                              # Fight stats data
+│   ├── scorecard_OCR                          # Scorecard OCR script
+│   └── scraping                               # Scraping scripts
+│       ├── ufc_scorecards_scraping            # Scorecards scraper
+│       │   └── ufc_scorecards_scraping        # Scorecards scraper
+│       │       └── spiders                    # Scorecards spider
+│       └── ufc_stats_scraping                 # Stats scraper
+│           └── ufcstats_scraping              # Stats scraper
+│               └── spiders                    # Stats spider
+└── tests                                      # Tests
+    ├── OCR_parsing                            # OCR tests
+    │   └── mock_scorecard                     # Mock data to test OCR on
+    └── scrapers                               # Scraper tests
+        ├── test_scorecards_scraper            # Scorecard scraper testing
+        │   └── mock_pages                     # Mock data to test scorecard scraper on
+        │       ├── mock_event_page            # Mock single event page
+        │       ├── mock_events_page           # Mock events page
+        │       └── mock_scorecard             # Mock scorecard
+        └── test_stats_scraper                 # Stats scraper testing
+            └── mock_pages                     # Mock data to test stats scraper on
+                ├── mock_event_page            # Mock single event page
+                ├── mock_events_page           # Mock events page
+                └── mock_fight_page            # Mock single fight page
 ```
