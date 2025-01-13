@@ -1,6 +1,6 @@
 # UFC Data Lab
 
-This repo collects, preprocesses and does EDA on UFC Fight data, including stats, scorecards, and OCR-processed results. It provides tools used for scraping, parsing, and analyzing fight information, making it useful for sports analytics, machine learning and research.
+This repo collects, preprocesses and does EDA on UFC Fight data, including stats, scorecards, and OCR-processed results.
 
 ## Features
 - Scraping UFC stats and scorecards.
@@ -11,48 +11,64 @@ This repo collects, preprocesses and does EDA on UFC Fight data, including stats
 ## Installation
 ```bash
 1. Clone the repository:
-git clone https://github.com/komaksym/UFC_fights_dataset_collection.git
-
-2. Create a virtual environment using a tool of your choice
-
-3. Install dependancies:
-pip install -r requirements.txt
+git clone https://github.com/komaksym/UFC-DataLab.git
+2. Ensure conda is installed:
+conda --version
+3. Install dependancies and create virtual env:
+conda env create -f environment.txt
+4. Activate the environment:
+conda activate paddle_env
 ```
 
 ## Usage
 ```bash
 1. To scrape  UFC stats:
-cd scraping/ufc_stats_scraping
+cd src/scraping/ufc_stats_scraping
 scrapy crawl stats_spider
 
 2. To scrape UFC scorecards:
-cd scraping/ufc_scorecards_scraping
+cd src/scraping/ufc_scorecards_scraping
 scrapy crawl scorecards_spider
 
 3. To OCR parse the scraped scorecards:
 Move your scraped data to the datasets/scorecards/scraped_scorecard_images/new_version_scorecards/
-python scorecard_OCR/app.py
+python src/scorecard_OCR/app.py
+
+4. To run tests:
+pytest
 ```
 
 ## Directory Structure
-```bash
-.
-├── EDA                                          # Exploratory Data Analysis
-├── datasets  	                                 # Contains collected and processed data       
-├── merged_stats_n_scorecards                    # Merged scorecard images and stats
-│   ├── scorecards                               # Scorecard images and OCR results
-│   │   ├── OCR_parsed_scorecards                # OCR parsed scorecards into .csv
-│   │   └── scraped_scorecard_images             # Scraped scorecards (images in .jpg format)
-│   │       ├── new_version_scorecards           # New version scorecards (.jpg)
-│   │       ├── old_version_scorecards           # Old version scorecards (.jpg)
-│   │       └── pre-new_version_scorecards       # Pre-new version scorecards (.jpg)
-│   └── stats                                    # Fight stats (.csv)
-├── scorecard_OCR                                # Script for OCR parsing the scorecards images
-└── scraping                                     # Scraping folder
-    ├── ufc_scorecards_scraping                  # Scorecard scraper
-    │   └── ufc_scorecards_scraping              # Scorecard scraper sub-folder
-    │       └── spiders                          # Scorecard spiders
-    └── ufc_stats_scraping                       # Stats scraper
-        └── ufcstats_scraping                    # Stats scraper sub-folder
-            └── spiders                          # Stats spiders
+```bash 
+. 
+├── src
+│   ├── EDA
+│   ├── datasets
+│   │   ├── merged_stats_n_scorecards
+│   │   ├── scorecards
+│   │   │   ├── OCR_parsed_scorecards
+│   │   │   └── scraped_scorecard_images
+│   │   └── stats
+│   ├── scorecard_OCR
+│   └── scraping
+│       ├── ufc_scorecards_scraping
+│       │   └── ufc_scorecards_scraping
+│       │       └── spiders
+│       └── ufc_stats_scraping
+│           └── ufcstats_scraping
+│               └── spiders
+└── tests
+    ├── OCR_parsing
+    │   └── mock_scorecard
+    └── scrapers
+        ├── test_scorecards_scraper
+        │   └── mock_pages
+        │       ├── mock_event_page
+        │       ├── mock_events_page
+        │       └── mock_scorecard
+        └── test_stats_scraper
+            └── mock_pages
+                ├── mock_event_page
+                ├── mock_events_page
+                └── mock_fight_page.
 ```
