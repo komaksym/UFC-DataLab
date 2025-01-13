@@ -1,15 +1,18 @@
 from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping.spiders.scorecards_spider import Scorecards_Spider
 from pathlib import Path
 import pytest
+from typing import Dict, List, Any
 import scrapy
 from scrapy.http import HtmlResponse
 
 
-class TestScorecardSpider():
-    def setup_method(self):
-        self.spider = Scorecards_Spider()
+class TestScorecardSpider:
+    def setup_method(self) -> None:
+        self.spider: Scorecards_Spider = Scorecards_Spider()
+        self.mock_pages: Dict[str, Path]
+        self.start_url: Path
 
-        def create_full_path(relative_path):
+        def create_full_path(relative_path: str) -> Path:
             """Method for finding paths to mock pages"""
             full_path = Path(__file__).parents[0] / relative_path
             return full_path.resolve()
@@ -22,7 +25,7 @@ class TestScorecardSpider():
 
         self.start_url = self.mock_pages['events_page']
 
-    def mock_response(self, path):
+    def mock_response(self, path: str) -> HtmlResponse:
         """For creating a mock html response"""
         with open(path, "r") as f:
             html_content = f.read()
@@ -38,7 +41,7 @@ class TestScorecardSpider():
         return response
     
     @pytest.fixture
-    def mock_expected_links(self):
+    def mock_expected_links(self) -> List[str]:
         mock_expected = ['file:///news/official-judges-scorecards-ufc-fight-night-covington-vs-buckley-tampa',
                          'file:///news/official-judges-scorecards-ufc-310-pantoja-vs-asakura',
                          'file:///news/official-judges-scorecards-ufc-macau-yan-vs-figueiredo',
@@ -49,13 +52,13 @@ class TestScorecardSpider():
         
         return mock_expected        
 
-    def test_parse(self, mock_expected_links):
+    def test_parse(self, mock_expected_links: List[str]) -> None:
         yielded_responses = self.spider.parse(self.mock_response(self.start_url))
-        unpacked_responses = [response.url for response in list(yielded_responses)]
+        unpacked_responses: List[str] = [response.url for response in list(yielded_responses)]
         assert unpacked_responses == mock_expected_links
     
     @pytest.fixture
-    def mock_expected_images(self):
+    def mock_expected_images(self) -> List[str]:
         mock_expected = ['https://ufc.com/images/styles/inline/s3/2024-11/UFC%20309%20Jones%20vs.%20Miocic%20-%20Scorecards%20-%20Hardy%20vs.%20Moura%20copy.jpg?itok=Zi5TPB4c',
                          'https://ufc.com/images/styles/inline/s3/2024-11/1UFC_309_Jones_vs__Miocic_-_Scorecards_-_Hafez_vs__Elliott_pdf-copy.jpg?itok=WU5n2pHh',
                          'https://ufc.com/images/styles/inline/s3/2024-11/2UFC_309_Jones_vs__Miocic_-_Scorecards_-_Gall_vs__Brahimaj_pdfcopy.jpg?itok=kJsYLStO',
@@ -70,7 +73,7 @@ class TestScorecardSpider():
                          'https://ufc.com/images/styles/inline/s3/2024-11/01UFC_309_Jones_vs__Miocic_-_Scorecards_-_Jones_vs__Miocic_pdf-copy.jpg?itok=qsxO5UrD']
         return mock_expected
 
-    def test_parse_event(self, mock_expected_images):
+    def test_parse_event(self, mock_expected_images: List[str]) -> None:
         yielded_responses = self.spider.parse_event(self.mock_response(self.mock_pages['single_event']))
-        unpacked_responses = list(yielded_responses)[0]['image_urls']
+        unpacked_responses: List[str] = list(yielded_responses)[0]['image_urls']
         assert unpacked_responses == mock_expected_images
