@@ -41,11 +41,11 @@ pytest
 ## Directory Structure
 ```bash 
 . 
-├── src
-│   ├── EDA
-│   ├── datasets
-│   │   ├── merged_stats_n_scorecards
-│   │   ├── scorecards
+├── src                                        # Source files
+│   ├── EDA                                    # Exploratory Data Analysis
+│   ├── datasets                               # Datasets
+│   │   ├── merged_stats_n_scorecards          # Scraped scorecards data
+│   │   ├── scorecards                           
 │   │   │   ├── OCR_parsed_scorecards
 │   │   │   └── scraped_scorecard_images
 │   │   └── stats
