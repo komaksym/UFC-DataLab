@@ -134,7 +134,7 @@ class Stats_Spider(scrapy.Spider):
         ).get()
         fight_data_item["blue_fighter_sig_str"] = response.xpath(
             f"{detailed_fight_totals_base_path}[3]/p[2]/text()"
-        ).get():
+        ).get()
         fight_data_item["red_fighter_sig_str_pct"] = response.xpath(
             f"{detailed_fight_totals_base_path}[4]/p[1]/text()"
         ).get()
