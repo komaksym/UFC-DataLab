@@ -3,18 +3,18 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 import scrapy
-from typing import Dict, Any, Optional
+from typing import Optional
 
 
 class FightData(scrapy.Item):
     """Schema for UFC fight data with type hints and documentation."""
-    
+
     # Fight participant information
     red_fighter_name: str = scrapy.Field()
     blue_fighter_name: str = scrapy.Field()
     red_fighter_nickname: Optional[str] = scrapy.Field()
     blue_fighter_nickname: Optional[str] = scrapy.Field()
-    
+
     # Fight results
     red_fighter_result: str = scrapy.Field()
     blue_fighter_result: str = scrapy.Field()
@@ -26,13 +26,13 @@ class FightData(scrapy.Item):
     details: str = scrapy.Field()
     bout_type: str = scrapy.Field()
     bonus: Optional[str] = scrapy.Field()
-    
+
     # Event metadata
     event_name: str = scrapy.Field()
     event_date: str = scrapy.Field()
     event_location: str = scrapy.Field()
-    
-   # Detailed Fight data totals
+
+    # Detailed Fight data totals
     red_fighter_KD = scrapy.Field()
     blue_fighter_KD = scrapy.Field()
     red_fighter_sig_str = scrapy.Field()
@@ -81,3 +81,4 @@ class FightData(scrapy.Item):
     blue_fighter_sig_str_clinch_pct = scrapy.Field()
     red_fighter_sig_str_ground_pct = scrapy.Field()
     blue_fighter_sig_str_ground_pct = scrapy.Field()
+
