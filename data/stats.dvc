@@ -1,0 +1,6 @@
+outs:
+- md5: 71e1c0f5f2abf5f9a16f975130bcedfe.dir
+  size: 3473341
+  nfiles: 1
+  hash: md5
+  path: stats
