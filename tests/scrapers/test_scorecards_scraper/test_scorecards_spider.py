@@ -43,7 +43,7 @@ class TestScorecardSpider:
         return response
 
     @pytest.fixture
-    def mock_expected_links(self) -> List[str]:
+    def expected_links(self) -> List[str]:
         mock_expected = [
             "file:///news/official-judges-scorecards-ufc-fight-night-covington-vs-buckley-tampa",
             "file:///news/official-judges-scorecards-ufc-310-pantoja-vs-asakura",
@@ -56,13 +56,13 @@ class TestScorecardSpider:
 
         return mock_expected
 
-    def test_parse(self, mock_expected_links: List[str]) -> None:
+    def test_parse(self, expected_links: List[str]) -> None:
         yielded_responses = self.spider.parse(self.mock_response(self.start_url))
         unpacked_responses: List[str] = [response.url for response in list(yielded_responses)]
-        assert unpacked_responses == mock_expected_links
+        assert unpacked_responses == expected_links
 
     @pytest.fixture
-    def mock_expected_images(self) -> List[str]:
+    def expected_images(self) -> List[str]:
         mock_expected = [
             "https://ufc.com/images/styles/inline/s3/2024-11/UFC%20309%20Jones%20vs.%20Miocic%20-%20Scorecards%20-%20Hardy%20vs.%20Moura%20copy.jpg?itok=Zi5TPB4c",
             "https://ufc.com/images/styles/inline/s3/2024-11/1UFC_309_Jones_vs__Miocic_-_Scorecards_-_Hafez_vs__Elliott_pdf-copy.jpg?itok=WU5n2pHh",
@@ -79,7 +79,7 @@ class TestScorecardSpider:
         ]
         return mock_expected
 
-    def test_parse_event(self, mock_expected_images: List[str]) -> None:
+    def test_parse_event(self, expected_images: List[str]) -> None:
         yielded_responses = self.spider.parse_event(self.mock_response(self.mock_pages["single_event"]))
         unpacked_responses: List[str] = list(yielded_responses)[0]["image_urls"]
-        assert unpacked_responses == mock_expected_images
+        assert unpacked_responses == expected_images
