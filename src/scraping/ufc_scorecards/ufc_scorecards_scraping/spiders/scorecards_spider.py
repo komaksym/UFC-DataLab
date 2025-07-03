@@ -1,6 +1,8 @@
+from typing import Iterator, List
+
 import scrapy
 from scrapy.http import Request, Response
-from typing import List, Iterator
+
 from ..items import ScorecardImagesItem
 
 

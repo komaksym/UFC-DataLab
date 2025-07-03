@@ -1,9 +1,11 @@
-from ....src.scraping.ufc_scorecards.ufc_scorecards_scraping.spiders.scorecards_spider import ScorecardsSpider
 from pathlib import Path
-import pytest
 from typing import Dict, List
+
+import pytest
 import scrapy
 from scrapy.http import HtmlResponse
+
+from ....src.scraping.ufc_scorecards.ufc_scorecards_scraping.spiders.scorecards_spider import ScorecardsSpider
 
 
 class TestScorecardSpider:
@@ -19,12 +21,8 @@ class TestScorecardSpider:
 
         # Storing mock pages
         self.mock_pages = {
-            "events_page": create_full_path(
-                "mock_pages/mock_events_page/events_page.html"
-            ),
-            "single_event": create_full_path(
-                "mock_pages/mock_event_page/event_page.html"
-            ),
+            "events_page": create_full_path("mock_pages/mock_events_page/events_page.html"),
+            "single_event": create_full_path("mock_pages/mock_event_page/event_page.html"),
         }
 
         self.start_url = self.mock_pages["events_page"]
@@ -40,9 +38,7 @@ class TestScorecardSpider:
         # Mock request
         request = scrapy.Request(url=url)
         # Mock response
-        response = HtmlResponse(
-            url=url, request=request, body=html_content, encoding="utf-8"
-        )
+        response = HtmlResponse(url=url, request=request, body=html_content, encoding="utf-8")
 
         return response
 
@@ -62,9 +58,7 @@ class TestScorecardSpider:
 
     def test_parse(self, mock_expected_links: List[str]) -> None:
         yielded_responses = self.spider.parse(self.mock_response(self.start_url))
-        unpacked_responses: List[str] = [
-            response.url for response in list(yielded_responses)
-        ]
+        unpacked_responses: List[str] = [response.url for response in list(yielded_responses)]
         assert unpacked_responses == mock_expected_links
 
     @pytest.fixture
@@ -86,8 +80,6 @@ class TestScorecardSpider:
         return mock_expected
 
     def test_parse_event(self, mock_expected_images: List[str]) -> None:
-        yielded_responses = self.spider.parse_event(
-            self.mock_response(self.mock_pages["single_event"])
-        )
+        yielded_responses = self.spider.parse_event(self.mock_response(self.mock_pages["single_event"]))
         unpacked_responses: List[str] = list(yielded_responses)[0]["image_urls"]
         assert unpacked_responses == mock_expected_images
