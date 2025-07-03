@@ -23,15 +23,8 @@ class StatsPipeline:
 
     def process_item(self, item, spider: Any) -> Dict[str, Any]:
         """
-        Process and clean scraped UFC fight data.
+        Process and clean scraped UFC fight data."""
 
-        Args:
-            item: Scraped item containing fight data
-            spider: Spider instance that generated this item
-
-        Returns:
-            Processed item with cleaned data
-        """
         try:
             adapter = ItemAdapter(item)
             self.clean_text_fields(adapter)
@@ -55,6 +48,7 @@ class StatsPipeline:
 
     def validate_data(self, adapter: ItemAdapter) -> bool:
         """Validate critical data fields."""
+
         required_fields = ["red_fighter_name", "blue_fighter_name", "event_name", "event_date"]
         for field in required_fields:
             if adapter.get(field) == "-":
@@ -64,6 +58,7 @@ class StatsPipeline:
 
     def clean_text_fields(self, adapter: ItemAdapter) -> None:
         """Clean and normalize text fields."""
+
         for fieldname in adapter.field_names():
             value = adapter.get(fieldname, "-")
             if isinstance(value, list):
@@ -80,12 +75,14 @@ class StatsPipeline:
 
     def process_nicknames(self, adapter: ItemAdapter) -> None:
         """Clean fighter nicknames."""
+
         for nickname in ["red_fighter_nickname", "blue_fighter_nickname"]:
             if adapter.get(nickname):
                 adapter[nickname] = re.sub(r'["\\]', "", adapter.get(nickname) or "")
 
     def process_bonus(self, adapter: ItemAdapter) -> None:
         """Extract bonus type from image source."""
+
         bonus = adapter.get("bonus")
         if bonus and bonus != "-":
             try:
@@ -96,6 +93,7 @@ class StatsPipeline:
 
     def convert_percentages(self, adapter: ItemAdapter) -> None:
         """Convert percentage strings to numeric values."""
+
         percentage_fields = [field for field in adapter.field_names() if field.endswith("_pct")]
         for field in percentage_fields:
             value = adapter.get(field, "-")

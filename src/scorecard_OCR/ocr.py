@@ -59,7 +59,7 @@ class FightData:
 
 
 def parse_image(image_path: str) -> FightData:
-    """Parsing the image."""
+    """Parse the image. Extract names, date of the fight, scores from the scorecard."""
 
     try:
         # Defining ocr engine object

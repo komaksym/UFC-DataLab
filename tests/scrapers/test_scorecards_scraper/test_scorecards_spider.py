@@ -10,12 +10,15 @@ from src.scraping.ufc_scorecards.ufc_scorecards_scraping.spiders.scorecards_spid
 
 class TestScorecardSpider:
     def setup_method(self) -> None:
+        """Initial setup for testing"""
+
         self.spider: ScorecardsSpider = ScorecardsSpider()
         self.mock_pages: Dict[str, Path]
         self.start_url: Path
 
         def create_full_path(relative_path: str) -> Path:
             """Method for finding paths to mock pages"""
+
             full_path = Path(__file__).parents[0] / relative_path
             return full_path.resolve()
 
@@ -29,6 +32,7 @@ class TestScorecardSpider:
 
     def mock_response(self, path: Path) -> HtmlResponse:
         """For creating a mock html response"""
+
         with open(path, "r") as f:
             html_content = f.read()
 
@@ -57,6 +61,8 @@ class TestScorecardSpider:
         return mock_expected
 
     def test_parse(self, expected_links: List[str]) -> None:
+        """Tests main parsing function"""
+
         yielded_responses = self.spider.parse(self.mock_response(self.start_url))
         unpacked_responses: List[str] = [response.url for response in list(yielded_responses)]
         assert unpacked_responses == expected_links
@@ -80,6 +86,8 @@ class TestScorecardSpider:
         return mock_expected
 
     def test_parse_event(self, expected_images: List[str]) -> None:
+        """Tests event parsing method."""
+
         yielded_responses = self.spider.parse_event(self.mock_response(self.mock_pages["single_event"]))
         unpacked_responses: List[str] = list(yielded_responses)[0]["image_urls"]
         assert unpacked_responses == expected_images

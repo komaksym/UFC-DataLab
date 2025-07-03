@@ -13,8 +13,9 @@ class PathConfig:
         PROJECT_ROOT / "src/datasets/scorecards/OCR_parsed_scorecards/parsed_scorecards_new_version.csv"
     )
 
-    # Validate paths exist
     def validate_paths(self):
+        """Validate for path existence"""
+
         if not self.INPUT_PATH.exists():
             raise ValueError(f"Input path does not exist: {self.INPUT_PATH}")
         self.OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)

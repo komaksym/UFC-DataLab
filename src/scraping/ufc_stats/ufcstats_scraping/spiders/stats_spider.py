@@ -16,28 +16,16 @@ class StatsSpider(scrapy.Spider):
     start_urls: List[str] = ["http://ufcstats.com/statistics/events/completed?page=all"]
 
     def parse(self, response: Response, **kwargs) -> Iterator[Request]:
-        """Extract and follow links to all UFC events.
+        """Extract and follow links to all UFC events."""
 
-        Args:
-            response: The response containing the events page HTML
-
-        Returns:
-            Iterator of Requests to event pages
-        """
         events_links: List[str] = response.css("a.b-link.b-link_style_black::attr(href)").getall()
 
         for event_link in events_links:
             yield scrapy.Request(url=event_link, callback=self.parse_event)
 
     def parse_event(self, response: Response) -> Iterator[Request]:
-        """Extract event data and follow links to individual fights.
+        """Extract event data and follow links to individual fights."""
 
-        Args:
-            response: The response containing the event page HTML
-
-        Returns:
-            Iterator of Requests to fight pages with event metadata
-        """
         event_data: Dict[str, Any] = {
             "name": response.css("h2.b-content__title span::text").get(),
             "date": response.xpath("/html/body/section/div/div/div[1]/ul/li[1]/text()").getall(),
@@ -54,14 +42,8 @@ class StatsSpider(scrapy.Spider):
             )
 
     def parse_fight(self, response: Response):
-        """Parse individual fight data using xpath selectors.
+        """Parse individual fight data using xpath selectors."""
 
-        Args:
-            response: The response containing the fight page HTML
-
-        Returns:
-            FightData item containing all fight statistics or None if critical data missing
-        """
         event_data: Dict[str, Any] = response.meta["event_data"]
         fight_data_item: FightData = FightData()
 
@@ -196,6 +178,7 @@ class StatsSpider(scrapy.Spider):
 
         def parse_sig_str_acc(response: Response, fight_data_item):
             """Detailed Fight data significant strikes"""
+
             detailed_fight_sigstr_tar_base_path = "/html/body/section/div/div/table/tbody/tr/td"
 
             fight_data_item["red_fighter_sig_str_head"] = response.xpath(
@@ -239,6 +222,7 @@ class StatsSpider(scrapy.Spider):
 
         def parse_sig_str_tar(response: Response, fight_data_item):
             """Parses significant strikes by target"""
+
             detailed_fight_sigstr_pos_base_path = "/html/body/section/div/div/section[6]/div/div/div[1]/div"
 
             # Detailed Fight pct data significant strikes by target
@@ -265,6 +249,7 @@ class StatsSpider(scrapy.Spider):
 
         def parse_sig_str_pos(response: Response, fight_data_item):
             """Parses significant strikes by position"""
+
             detailed_fight_sigstr_pos_base_path = "/html/body/section/div/div/section[6]/div/div/div[1]/div"
 
             # Detailed Fight pct data significant strikes by position
@@ -297,10 +282,7 @@ class StatsSpider(scrapy.Spider):
         return fight_data_item
 
     def handle_error(self, failure) -> None:
-        """Handle request failures.
+        """Handle request failures."""
 
-        Args:
-            failure: The Failure object containing error details
-        """
         self.logger.error(f"Request failed: {failure.request.url}")
         self.logger.error(f"Error: {failure.value}")

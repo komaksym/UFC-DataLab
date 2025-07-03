@@ -32,15 +32,7 @@ class TestStatsSpider:
         self.start_urls = self.mock_pages["events_page"]
 
     def mock_response(self, path: Path, metadata: Optional[Dict[str, Any]] = None) -> HtmlResponse:
-        """Create a mock HtmlResponse object for testing.
-
-        Args:
-            path (str): Path to the mock HTML file
-            metadata (dict, optional): Additional metadata for the request
-
-        Returns:
-            HtmlResponse: A mock response object containing the HTML content
-        """
+        """Create a mock HtmlResponse object for testing."""
 
         with open(path, "r") as f:
             html_content = f.read()
@@ -60,12 +52,7 @@ class TestStatsSpider:
         return response
 
     def test_parse(self) -> None:
-        """Test the main parse method for correct event link extraction.
-
-        Verifies that:
-        - All extracted links are valid event URLs
-        - Links follow the expected UFC Stats format
-        """
+        """Test the main parse method for correct event link extraction."""
 
         responses: Iterator[Request] = self.spider.parse(self.mock_response(self.start_urls))
         assert all(response.url.startswith("http://ufcstats.com/event-details/") for response in responses), (

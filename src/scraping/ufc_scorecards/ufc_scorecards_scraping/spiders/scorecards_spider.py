@@ -12,6 +12,9 @@ class ScorecardsSpider(scrapy.Spider):
     start_urls: List[str] = ["https://www.ufc.com/scorecards"]
 
     def parse(self, response: Response, **kwargs) -> Iterator[Request]:
+        """Parse main page, follow the links to individual events and 
+        next pages of events by following the 'next page' button"""
+        
         # Extract event links from the current page
         event_links: List[str] = response.xpath(
             '//*[@id="block-mainpagecontent"]/div/div/div[3]/div/div/a/@href'
@@ -30,6 +33,8 @@ class ScorecardsSpider(scrapy.Spider):
         yield scrapy.Request(url=next_page, callback=self.parse)
 
     def parse_event(self, response: Response) -> Iterator[ScorecardImagesItem]:
+        """Parse an individual event for images."""
+
         # Robust image extraction with multiple XPath attempts
         image_path: str = (
             '//*[@id="block-mainpagecontent"]/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/img/@src'

@@ -23,10 +23,12 @@ class ScorecardImagesPipeline(ImagesPipeline):
         self.counter: int = 0
         self.logger = logging.getLogger(__name__)
 
-    # Gets the URLs of the images
+    
     def get_media_requests(  # pyright: ignore[reportIncompatibleMethodOverride] (the return type follows scrapy docs)
         self, item: ScorecardImagesItem, info: MediaPipeline.SpiderInfo
     ) -> Iterator[Request]:
+        """Gets the URLs of the images."""
+
         for image_url in item["image_urls"]:
             # Add logging to debug URL processing
             info.spider.logger.info(f"Requesting image: {image_url}")
@@ -36,6 +38,8 @@ class ScorecardImagesPipeline(ImagesPipeline):
             self.counter += 1
 
     def file_path(self, request: Request, response=None, info=None, *, item=None) -> str:
+        """Names images by their index count."""
+
         img_index: int = request.meta["img_index"]
         return f"downloaded_images/{img_index}.jpg"
 
@@ -46,8 +50,9 @@ class ScorecardImagesPipeline(ImagesPipeline):
         info: MediaPipeline.SpiderInfo,
     ) -> ScorecardImagesItem:
         """
-        Is called when all image requests for an item are completed
+        Saves images when all image requests for an item are completed.
         """
+
         image_paths: List[str] = [x["path"] for ok, x in results if ok]
         if not image_paths:
             info.spider.logger.error("No images were downloaded!")
