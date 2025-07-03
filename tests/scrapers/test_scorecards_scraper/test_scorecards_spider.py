@@ -3,7 +3,7 @@ from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping.spiders.scorec
 )
 from pathlib import Path
 import pytest
-from typing import Dict, List, Any
+from typing import Dict, List
 import scrapy
 from scrapy.http import HtmlResponse
 

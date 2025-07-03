@@ -5,12 +5,15 @@
 
 
 # useful for handling different item types with a single interface
-import scrapy
-from scrapy.http import Request
-from itemadapter import ItemAdapter
+import logging
 from typing import Iterator, List, Tuple
+
+from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
+from scrapy.http import Request
 from scrapy.pipelines.images import ImagesPipeline
+from scrapy.pipelines.media import MediaPipeline
+
 from .items import ScorecardImagesItem
 
 
@@ -18,10 +21,11 @@ class ScorecardImagesPipeline(ImagesPipeline):
     def __init__(self, store_url, download_func=None, settings=None) -> None:
         super().__init__(store_url, settings=settings, download_func=download_func)
         self.counter: int = 0
+        self.logger = logging.getLogger(__name__)
 
     # Gets the URLs of the images
-    def get_media_requests(
-        self, item: ScorecardImagesItem, info: scrapy.pipelines.media.MediaPipeline.SpiderInfo
+    def get_media_requests(  # pyright: ignore[reportIncompatibleMethodOverride] (the return type follows scrapy docs)
+        self, item: ScorecardImagesItem, info: MediaPipeline.SpiderInfo
     ) -> Iterator[Request]:
         for image_url in item["image_urls"]:
             # Add logging to debug URL processing
@@ -39,7 +43,7 @@ class ScorecardImagesPipeline(ImagesPipeline):
         self,
         results: List[Tuple[bool, dict]],
         item: ScorecardImagesItem,
-        info: scrapy.pipelines.media.MediaPipeline.SpiderInfo,
+        info: MediaPipeline.SpiderInfo,
     ) -> ScorecardImagesItem:
         """
         Is called when all image requests for an item are completed
