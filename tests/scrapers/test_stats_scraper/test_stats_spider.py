@@ -41,6 +41,7 @@ class TestStatsSpider:
         Returns:
             HtmlResponse: A mock response object containing the HTML content
         """
+
         with open(path, "r") as f:
             html_content = f.read()
 
@@ -65,6 +66,7 @@ class TestStatsSpider:
         - All extracted links are valid event URLs
         - Links follow the expected UFC Stats format
         """
+
         responses: Iterator[Request] = self.spider.parse(self.mock_response(self.start_urls))
         assert all(response.url.startswith("http://ufcstats.com/event-details/") for response in responses), (
             f"Invalid event links detected.\n"
@@ -75,6 +77,7 @@ class TestStatsSpider:
     @pytest.fixture
     def mock_metadata(self) -> Dict[str, Dict[str, Any]]:
         """Fixture providing sample event metadata for testing."""
+
         return {
             "event_data": {
                 "name": "\n              UFC 309: Jones vs. Miocic\n            ",
@@ -91,6 +94,7 @@ class TestStatsSpider:
         - All fight links are valid URLs
         - Links maintain expected format
         """
+
         responses: List[Request] = list(
             self.spider.parse_event(self.mock_response(self.mock_pages["single_event"]))
         )
@@ -108,6 +112,7 @@ class TestStatsSpider:
     @pytest.fixture
     def expected_parsed_fight_data(self):
         """Fixture providing expected parsed fight data."""
+
         return [
             {
                 "blue_fighter_KD": "\n      0\n    ",
@@ -255,6 +260,7 @@ class TestStatsSpider:
         - Fight data is correctly extracted
         - Output is properly formatted as FightData item
         """
+
         response: List[FightData] = list(
             self.spider.parse_fight(self.mock_response(self.mock_pages["single_fight"], mock_metadata))
         )

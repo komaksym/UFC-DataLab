@@ -1,8 +1,8 @@
 import pytest
 from typing import Dict, Any, Optional, List
-from src.scraping.ufc_stats_scraping.ufcstats_scraping.pipelines import StatsPipeline
-from src.scraping.ufc_stats_scraping.ufcstats_scraping.items import FightData
-from src.scraping.ufc_stats_scraping.ufcstats_scraping.spiders.stats_spider import Stats_Spider
+from src.scraping.ufc_stats.ufcstats_scraping.pipelines import StatsPipeline
+from src.scraping.ufc_stats.ufcstats_scraping.items import FightData
+from src.scraping.ufc_stats.ufcstats_scraping.spiders.stats_spider import StatsSpider
 from itemadapter import ItemAdapter
 
 
@@ -15,7 +15,7 @@ class TestStatsPipeline:
         self.fight_data_processed: FightData = FightData()
 
     @pytest.fixture
-    def mock_item_raw(self) -> None:
+    def mock_item_raw(self):
         self.fight_data_raw['red_fighter_name'] = 'Colby Covington '
         self.fight_data_raw['blue_fighter_name'] = 'Joaquin Buckley '
         self.fight_data_raw['red_fighter_nickname'] = '\n      "Chaos"\n    '
@@ -322,7 +322,7 @@ class TestStatsPipeline:
         """Testing the process_item method"""
 
         # Passing the raw data to the pipeline method
-        self.pipeline.process_item(self.fight_data_raw, Stats_Spider)
+        self.pipeline.process_item(self.fight_data_raw, StatsSpider)
         # Checking whether the results meet the requirements
         assert self.fight_data_raw == self.fight_data_processed, (
             "Complete item processing failed.\n"

@@ -1,5 +1,5 @@
-from typing import Any, Dict, Iterator, List
 from functools import reduce
+from typing import Any, Dict, Iterator, List
 
 import scrapy
 from scrapy.http.request import Request
@@ -132,6 +132,7 @@ class StatsSpider(scrapy.Spider):
 
     def parse_fight_detailed_data(self, response: Response, fight_data_item):
         """Parses detailed fight data total strikes, significant strikes, takedowns, submissions, etc."""
+
         def parse_fundamentals(response: Response, fight_data_item):
             """Detailed Fight data totals"""
             detailed_fight_totals_base_path = "/html/body/section/div/div/section[2]/table/tbody/tr/td"
@@ -290,7 +291,7 @@ class StatsSpider(scrapy.Spider):
 
         # Grab all parsers into a list
         parsers = [parse_fundamentals, parse_sig_str_acc, parse_sig_str_tar, parse_sig_str_pos]
-        
+
         # Run parsers
         fight_data_item = reduce(lambda item, parser: parser(response, item), parsers, fight_data_item)
         return fight_data_item
