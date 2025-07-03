@@ -1,13 +1,16 @@
-import pytest
-from typing import List, Tuple, Optional
+from pathlib import Path
+from typing import List, Tuple
+
 import pandas as pd
-from config import PathConfig
-from src.scorecard_OCR.app import (
+import pytest
+
+from src.scorecard_OCR.ocr import (
+    FightData,
+    parse_image,
     process_scorecards,
     read_images,
-    parse_image,
-    FightData,
 )
+from .config import PathConfig
 
 
 class TestFightData:
@@ -18,16 +21,10 @@ class TestFightData:
 
     def test_initialization(self) -> None:
         """Test __init__ method"""
-        assert self.fight.red_fighter_name == "-", (
-            "Red fighter name should be initialized as '-'"
-        )
-        assert self.fight.blue_fighter_name == "-", (
-            "Blue fighter name should be initialized as '-'"
-        )
+        assert self.fight.red_fighter_name == "-", "Red fighter name should be initialized as '-'"
+        assert self.fight.blue_fighter_name == "-", "Blue fighter name should be initialized as '-'"
         assert self.fight.date == "-", "Date should be initialized as '-'"
-        assert self.fight.red_fighter_total_pts == [], (
-            "Red fighter points should be initialized as empty list"
-        )
+        assert self.fight.red_fighter_total_pts == [], "Red fighter points should be initialized as empty list"
         assert self.fight.blue_fighter_total_pts == [], (
             "Blue fighter points should be initialized as empty list"
         )
@@ -49,13 +46,11 @@ class TestFightData:
 
     def test_validation(self, mock_data) -> None:
         """Testing validation function"""
-        assert self.fight.validate(), (
-            "Fight data validation method failed.\nExpected: True.\nGot: False."
-        )
+        assert self.fight.validate(), "Fight data validation method failed.\nExpected: True.\nGot: False."
 
 
 @pytest.fixture
-def mock_scorecard_path() -> str:
+def mock_scorecard_path() -> Path:
     """Set up a mock scorecard folder path"""
     path_config = PathConfig()
     path_config.validate_paths()
@@ -63,51 +58,38 @@ def mock_scorecard_path() -> str:
 
 
 @pytest.fixture
-def mock_output_path() -> str:
+def mock_output_path() -> Path:
     """Set up a mock scorecard folder path"""
     path_config = PathConfig()
     return path_config.OUTPUT_PATH
 
 
 @pytest.fixture
-def mock_scorecard_image(mock_scorecard_path: str) -> Tuple[str, str]:
+def mock_scorecard_image(mock_scorecard_path: Path) -> List[str]:
     """Set up a mock scorecard image path"""
     return read_images(mock_scorecard_path)
 
 
-def test_read_images(mock_scorecard_path: str) -> None:
+def test_read_images(mock_scorecard_path: Path) -> None:
     """Testing read_images function"""
-    assert read_images(mock_scorecard_path)[0].endswith(".jpg"), (
-        "Image path should end with .jpg extension"
-    )
+    assert read_images(mock_scorecard_path)[0].endswith(".jpg"), "Image path should end with .jpg extension"
 
 
 def test_parse_image(mock_scorecard_image: Tuple[str, str]) -> None:
     """Testing parse_image function"""
     # Extracting data
-    fight_data: FightData = parse_image(*mock_scorecard_image)
+    breakpoint()
+    fight_data: FightData = parse_image(mock_scorecard_image[0])
 
     # Running tests
-    assert fight_data.red_fighter_name == "BRANDON MORENO", (
-        "Red fighter name not correctly parsed"
-    )
-    assert fight_data.blue_fighter_name == "AMIR ALBAZI", (
-        "Blue fighter name not correctly parsed"
-    )
+    assert fight_data.red_fighter_name == "BRANDON MORENO", "Red fighter name not correctly parsed"
+    assert fight_data.blue_fighter_name == "AMIR ALBAZI", "Blue fighter name not correctly parsed"
     assert fight_data.date == "11/02/2024", "Fight date not correctly parsed"
-    assert fight_data.red_fighter_total_pts == ["49", "50", "50"], (
-        "Red fighter points not correctly parsed"
-    )
-    assert fight_data.blue_fighter_total_pts == ["46", "45", "45"], (
-        "Blue fighter points not correctly parsed"
-    )
+    assert fight_data.red_fighter_total_pts == ["49", "50", "50"], "Red fighter points not correctly parsed"
+    assert fight_data.blue_fighter_total_pts == ["46", "45", "45"], "Blue fighter points not correctly parsed"
 
 
-def test_process_scorecards(mock_scorecard_path: str, mock_output_path: str) -> None:
+def test_process_scorecards(mock_scorecard_path: Path, mock_output_path: Path) -> None:
     """Testing process scorecards"""
-    resulting_df: pd.DataFrame = process_scorecards(
-        mock_scorecard_path, mock_output_path
-    )
-    assert resulting_df.shape == (1, 5), (
-        "Resulting DataFrame should have 1 row and 5 columns"
-    )
+    resulting_df: pd.DataFrame = process_scorecards(mock_scorecard_path, mock_output_path)
+    assert resulting_df.shape == (1, 5), "Resulting DataFrame should have 1 row and 5 columns"
