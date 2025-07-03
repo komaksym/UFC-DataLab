@@ -3,34 +3,33 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 import scrapy
-from typing import Optional
 
 
 class FightData(scrapy.Item):
     """Schema for UFC fight data with type hints and documentation."""
 
     # Fight participant information
-    red_fighter_name: str = scrapy.Field()
-    blue_fighter_name: str = scrapy.Field()
-    red_fighter_nickname: Optional[str] = scrapy.Field()
-    blue_fighter_nickname: Optional[str] = scrapy.Field()
+    red_fighter_name = scrapy.Field()
+    blue_fighter_name = scrapy.Field()
+    red_fighter_nickname = scrapy.Field()
+    blue_fighter_nickname = scrapy.Field()
 
     # Fight results
-    red_fighter_result: str = scrapy.Field()
-    blue_fighter_result: str = scrapy.Field()
-    method: str = scrapy.Field()
-    round: str = scrapy.Field()
-    time: str = scrapy.Field()
-    time_format: str = scrapy.Field()
-    referee: str = scrapy.Field()
-    details: str = scrapy.Field()
-    bout_type: str = scrapy.Field()
-    bonus: Optional[str] = scrapy.Field()
+    red_fighter_result = scrapy.Field()
+    blue_fighter_result = scrapy.Field()
+    method = scrapy.Field()
+    round = scrapy.Field()
+    time = scrapy.Field()
+    time_format = scrapy.Field()
+    referee = scrapy.Field()
+    details = scrapy.Field()
+    bout_type = scrapy.Field()
+    bonus = scrapy.Field()
 
     # Event metadata
-    event_name: str = scrapy.Field()
-    event_date: str = scrapy.Field()
-    event_location: str = scrapy.Field()
+    event_name = scrapy.Field()
+    event_date = scrapy.Field()
+    event_location = scrapy.Field()
 
     # Detailed Fight data totals
     red_fighter_KD = scrapy.Field()
@@ -81,4 +80,3 @@ class FightData(scrapy.Item):
     blue_fighter_sig_str_clinch_pct = scrapy.Field()
     red_fighter_sig_str_ground_pct = scrapy.Field()
     blue_fighter_sig_str_ground_pct = scrapy.Field()
-
