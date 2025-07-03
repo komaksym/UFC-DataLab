@@ -6,7 +6,7 @@ from scrapy.http.request import Request
 from scrapy.http.response import Response
 
 
-class Stats_Spider(scrapy.Spider):
+class StatsSpider(scrapy.Spider):
     """Spider for scraping UFC fight statistics."""
 
     name: str = "stats_spider"
@@ -22,9 +22,8 @@ class Stats_Spider(scrapy.Spider):
         Returns:
             Iterator of Requests to event pages
         """
-        events_links: List[str] = response.css(
-            "a.b-link.b-link_style_black::attr(href)"
-        ).getall()
+        events_links: List[str] = response.css("a.b-link.b-link_style_black::attr(href)").getall()
+
         for event_link in events_links:
             yield scrapy.Request(url=event_link, callback=self.parse_event)
 
@@ -39,17 +38,11 @@ class Stats_Spider(scrapy.Spider):
         """
         event_data: Dict[str, Any] = {
             "name": response.css("h2.b-content__title span::text").get(),
-            "date": response.xpath(
-                "/html/body/section/div/div/div[1]/ul/li[1]/text()"
-            ).getall(),
-            "location": response.css(
-                "li.b-list__box-list-item:nth-child(2)::text"
-            ).getall(),
+            "date": response.xpath("/html/body/section/div/div/div[1]/ul/li[1]/text()").getall(),
+            "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall(),
         }
 
-        fights_links: List[str] = response.css(
-            "a.b-flag.b-flag_style_green::attr(href)"
-        ).getall()
+        fights_links: List[str] = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()
         for fight_link in fights_links:
             yield scrapy.Request(
                 url=fight_link,
@@ -110,9 +103,7 @@ class Stats_Spider(scrapy.Spider):
         fight_data_item["bout_type"] = response.xpath(
             f"{general_fight_base_path}[2]/div[1]/i/text()"
         ).getall()[-1]
-        fight_data_item["bonus"] = response.xpath(
-            f"{general_fight_base_path}[2]/div[1]/i/img/@src"
-        ).get("-")
+        fight_data_item["bonus"] = response.xpath(f"{general_fight_base_path}[2]/div[1]/i/img/@src").get("-")
 
         # Event data
         fight_data_item["event_name"] = event_data["name"]
@@ -120,9 +111,7 @@ class Stats_Spider(scrapy.Spider):
         fight_data_item["event_location"] = event_data["location"]
 
         # Detailed Fight data totals
-        detailed_fight_totals_base_path = (
-            "/html/body/section/div/div/section[2]/table/tbody/tr/td"
-        )
+        detailed_fight_totals_base_path = "/html/body/section/div/div/section[2]/table/tbody/tr/td"
         fight_data_item["red_fighter_KD"] = response.xpath(
             f"{detailed_fight_totals_base_path}[2]/p[1]/text()"
         ).get()
@@ -179,12 +168,8 @@ class Stats_Spider(scrapy.Spider):
         ).get()
 
         # Detailed Fight data significant strikes
-        detailed_fight_sigstr_tar_base_path = (
-            "/html/body/section/div/div/table/tbody/tr/td"
-        )
-        detailed_fight_sigstr_pos_base_path = (
-            "/html/body/section/div/div/section[6]/div/div/div[1]/div"
-        )
+        detailed_fight_sigstr_tar_base_path = "/html/body/section/div/div/table/tbody/tr/td"
+        detailed_fight_sigstr_pos_base_path = "/html/body/section/div/div/section[6]/div/div/div[1]/div"
         fight_data_item["red_fighter_sig_str_head"] = response.xpath(
             f"{detailed_fight_sigstr_tar_base_path}[4]/p[1]/text()"
         ).get()
@@ -261,10 +246,7 @@ class Stats_Spider(scrapy.Spider):
         ).get()
 
         # Add error handling for critical data
-        if (
-            fight_data_item["red_fighter_name"] == "-"
-            or fight_data_item["blue_fighter_name"] == "-"
-        ):
+        if fight_data_item["red_fighter_name"] == "-" or fight_data_item["blue_fighter_name"] == "-":
             self.logger.error(f"Missing fighter names for fight at URL: {response.url}")
             return None
 

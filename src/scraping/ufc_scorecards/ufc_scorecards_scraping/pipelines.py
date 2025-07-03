@@ -11,8 +11,7 @@ from itemadapter import ItemAdapter
 from typing import Iterator, List, Tuple
 from scrapy.exceptions import DropItem
 from scrapy.pipelines.images import ImagesPipeline
-from src.scraping.ufc_scorecards_scraping. \
-     ufc_scorecards_scraping.items import ScorecardImagesItem
+from .items import ScorecardImagesItem
 
 
 class ScorecardImagesPipeline(ImagesPipeline):
@@ -21,22 +20,27 @@ class ScorecardImagesPipeline(ImagesPipeline):
         self.counter: int = 0
 
     # Gets the URLs of the images
-    def get_media_requests(self, item: ScorecardImagesItem, 
-                           info: scrapy.pipelines.media.MediaPipeline.SpiderInfo) -> Iterator[Request]:
-        for image_url in item['image_urls']:
+    def get_media_requests(
+        self, item: ScorecardImagesItem, info: scrapy.pipelines.media.MediaPipeline.SpiderInfo
+    ) -> Iterator[Request]:
+        for image_url in item["image_urls"]:
             # Add logging to debug URL processing
             info.spider.logger.info(f"Requesting image: {image_url}")
-            yield Request(image_url, meta={"img_index": self.counter}, 
-                          errback=self.handle_error, dont_filter=True)
+            yield Request(
+                image_url, meta={"img_index": self.counter}, errback=self.handle_error, dont_filter=True
+            )
             self.counter += 1
 
     def file_path(self, request: Request, response=None, info=None, *, item=None) -> str:
         img_index: int = request.meta["img_index"]
         return f"downloaded_images/{img_index}.jpg"
 
-    def item_completed(self, results: List[Tuple[bool, dict]], item: ScorecardImagesItem,
-                       info: scrapy.pipelines.media.MediaPipeline.SpiderInfo) \
-                        -> ScorecardImagesItem:
+    def item_completed(
+        self,
+        results: List[Tuple[bool, dict]],
+        item: ScorecardImagesItem,
+        info: scrapy.pipelines.media.MediaPipeline.SpiderInfo,
+    ) -> ScorecardImagesItem:
         """
         Is called when all image requests for an item are completed
         """
@@ -44,10 +48,10 @@ class ScorecardImagesPipeline(ImagesPipeline):
         if not image_paths:
             info.spider.logger.error("No images were downloaded!")
             raise DropItem("Item contains no images")
-        
+
         adapter: ItemAdapter = ItemAdapter(item)
         adapter["images"] = image_paths
         return item
-    
+
     def handle_error(self, failure):
         self.logger.error(f"Image download failed: {failure.value}")
