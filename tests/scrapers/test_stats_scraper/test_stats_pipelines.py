@@ -16,7 +16,7 @@ class TestStatsPipeline:
         self.fight_data_processed: FightData = FightData()
 
     @pytest.fixture
-    def mock_item_raw(self):
+    def mock_item_raw(self) -> None:
         """Mock raw version of an item."""
 
         self.fight_data_raw["red_fighter_name"] = "Colby Covington "
@@ -344,6 +344,7 @@ class TestStatsPipeline:
 
         # Passing the raw data to the pipeline method
         self.pipeline.process_item(self.fight_data_raw, StatsSpider)
+        
         # Checking whether the results meet the requirements
         assert self.fight_data_raw == self.fight_data_processed, (
             "Complete item processing failed.\n"

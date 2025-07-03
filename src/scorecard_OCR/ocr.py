@@ -155,7 +155,7 @@ def process_scorecards(
 
     try:
         try:
-            images = read_images(input_path)
+            images: List[str] = read_images(input_path)
             print(images)
             logging.info(f"Found {len(images)} images to process")
 

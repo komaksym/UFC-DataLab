@@ -19,7 +19,7 @@ class TestStatsSpider:
 
         def create_full_path(relative_path: str) -> Path:
             """Method for finding paths to mock pages"""
-            full_path = Path(__file__).parents[0] / relative_path
+            full_path: Path = Path(__file__).parents[0] / relative_path
             return full_path.resolve()
 
         # Storing mock pages
@@ -35,10 +35,10 @@ class TestStatsSpider:
         """Create a mock HtmlResponse object for testing."""
 
         with open(path, "r") as f:
-            html_content = f.read()
+            html_content: str = f.read()
 
         # Mock url
-        url = f"file://{path}"
+        url: str = f"file://{path}"
 
         # Ensuring metadata is a dictionary
         if metadata is None:

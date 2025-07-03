@@ -21,7 +21,7 @@ class ScorecardImagesPipeline(ImagesPipeline):
     def __init__(self, store_url, download_func=None, settings=None) -> None:
         super().__init__(store_url, settings=settings, download_func=download_func)
         self.counter: int = 0
-        self.logger = logging.getLogger(__name__)
+        self.logger: logging.Logger = logging.getLogger(__name__)
 
     
     def get_media_requests(  # pyright: ignore[reportIncompatibleMethodOverride] (the return type follows scrapy docs)
@@ -62,5 +62,5 @@ class ScorecardImagesPipeline(ImagesPipeline):
         adapter["images"] = image_paths
         return item
 
-    def handle_error(self, failure):
+    def handle_error(self, failure) -> None:
         self.logger.error(f"Image download failed: {failure.value}")

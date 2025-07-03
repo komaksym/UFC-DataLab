@@ -13,7 +13,7 @@ class PathConfig:
         PROJECT_ROOT / "src/datasets/scorecards/OCR_parsed_scorecards/parsed_scorecards_new_version.csv"
     )
 
-    def validate_paths(self):
+    def validate_paths(self) -> None:
         """Validate for path existence"""
 
         if not self.INPUT_PATH.exists():

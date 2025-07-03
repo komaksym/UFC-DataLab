@@ -23,7 +23,7 @@ class TestFightData:
         self.fight_data = FightData()
 
     @pytest.fixture
-    def expected_init_data(self):
+    def expected_init_data(self) -> FightData:
         return FightData(
             red_fighter_name="-",
             blue_fighter_name="-",
@@ -36,7 +36,7 @@ class TestFightData:
         assert expected_init_data == self.fight_data
 
     @pytest.fixture
-    def expected_to_list_data(self):
+    def expected_to_list_data(self) -> FightData:
         return FightData(
             red_fighter_name="-",
             blue_fighter_name="-",
@@ -50,7 +50,7 @@ class TestFightData:
         assert got == expected_to_list_data
 
     @pytest.fixture
-    def mock_validation_data(self):
+    def mock_validation_data(self) -> FightData:
         """Mock data for validation testing"""
 
         return FightData(
@@ -100,7 +100,7 @@ def test_read_images(mock_scorecard_path: Path) -> None:
 
 
 @pytest.fixture
-def expected_img_parsed_data():
+def expected_img_parsed_data() -> FightData:
     return FightData(
         red_fighter_name="BRANDON MORENO",
         blue_fighter_name="AMIR ALBAZI",
