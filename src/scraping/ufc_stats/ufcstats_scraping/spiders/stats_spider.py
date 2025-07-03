@@ -1,6 +1,5 @@
 import scrapy
-from typing import List, Iterator, Optional, Dict, Any
-from twisted.python.failure import Failure
+from typing import List, Iterator, Generator, Dict, Any
 from ..items import FightData
 from scrapy.http.request import Request
 from scrapy.http.response import Response
@@ -13,7 +12,7 @@ class StatsSpider(scrapy.Spider):
     allowed_domains: List[str] = ["ufcstats.com"]
     start_urls: List[str] = ["http://ufcstats.com/statistics/events/completed?page=all"]
 
-    def parse(self, response: Response) -> Iterator[Request]:
+    def parse(self, response: Response, **kwargs) -> Iterator[Request]:
         """Extract and follow links to all UFC events.
 
         Args:
@@ -51,7 +50,7 @@ class StatsSpider(scrapy.Spider):
                 errback=self.handle_error,
             )
 
-    def parse_fight(self, response: Response) -> Optional[FightData]:
+    def parse_fight(self, response: Response) -> Generator[FightData]:
         """Parse individual fight data using xpath selectors.
 
         Args:
@@ -170,6 +169,7 @@ class StatsSpider(scrapy.Spider):
         # Detailed Fight data significant strikes
         detailed_fight_sigstr_tar_base_path = "/html/body/section/div/div/table/tbody/tr/td"
         detailed_fight_sigstr_pos_base_path = "/html/body/section/div/div/section[6]/div/div/div[1]/div"
+
         fight_data_item["red_fighter_sig_str_head"] = response.xpath(
             f"{detailed_fight_sigstr_tar_base_path}[4]/p[1]/text()"
         ).get()
@@ -206,6 +206,7 @@ class StatsSpider(scrapy.Spider):
         fight_data_item["blue_fighter_sig_str_ground"] = response.xpath(
             f"{detailed_fight_sigstr_tar_base_path}[9]/p[2]/text()"
         ).get()
+
         # Detailed Fight pct data significant strikes by target
         fight_data_item["red_fighter_sig_str_head_pct"] = response.xpath(
             f"{detailed_fight_sigstr_pos_base_path}[1]/div/div[2]/div[1]/i[1]/text()"
@@ -225,6 +226,7 @@ class StatsSpider(scrapy.Spider):
         fight_data_item["blue_fighter_sig_str_leg_pct"] = response.xpath(
             f"{detailed_fight_sigstr_pos_base_path}[1]/div/div[2]/div[3]/i[3]/text()"
         ).get()
+
         # Detailed Fight pct data significant strikes by position
         fight_data_item["red_fighter_sig_str_distance_pct"] = response.xpath(
             f"{detailed_fight_sigstr_pos_base_path}[2]/div/div[2]/div[1]/i[1]/text()"
@@ -252,7 +254,7 @@ class StatsSpider(scrapy.Spider):
 
         yield fight_data_item
 
-    def handle_error(self, failure: Failure) -> None:
+    def handle_error(self, failure) -> None:
         """Handle request failures.
 
         Args:
