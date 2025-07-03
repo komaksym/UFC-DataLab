@@ -1,6 +1,4 @@
-from src.scraping.ufc_scorecards_scraping.ufc_scorecards_scraping.spiders.scorecards_spider import (
-    Scorecards_Spider,
-)
+from ....src.scraping.ufc_scorecards.ufc_scorecards_scraping.spiders.scorecards_spider import ScorecardsSpider
 from pathlib import Path
 import pytest
 from typing import Dict, List
@@ -10,7 +8,7 @@ from scrapy.http import HtmlResponse
 
 class TestScorecardSpider:
     def setup_method(self) -> None:
-        self.spider: Scorecards_Spider = Scorecards_Spider()
+        self.spider: ScorecardsSpider = ScorecardsSpider()
         self.mock_pages: Dict[str, Path]
         self.start_url: Path
 
@@ -31,7 +29,7 @@ class TestScorecardSpider:
 
         self.start_url = self.mock_pages["events_page"]
 
-    def mock_response(self, path: str) -> HtmlResponse:
+    def mock_response(self, path: Path) -> HtmlResponse:
         """For creating a mock html response"""
         with open(path, "r") as f:
             html_content = f.read()
