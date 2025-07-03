@@ -5,7 +5,7 @@ import pytest
 import scrapy
 from scrapy.http import HtmlResponse
 
-from ....src.scraping.ufc_scorecards.ufc_scorecards_scraping.spiders.scorecards_spider import ScorecardsSpider
+from src.scraping.ufc_scorecards.ufc_scorecards_scraping.spiders.scorecards_spider import ScorecardsSpider
 
 
 class TestScorecardSpider:
