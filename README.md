@@ -1,6 +1,6 @@
 # UFC Data Lab
 
-This repo collects, preprocesses and does EDA on UFC Fight data, including stats, scorecards, and OCR-processed results.
+This repository collects, preprocesses, performs OCR and then does EDA on UFC data, including fight-specific stats, fighter-specific stats from <a href="http://ufcstats.com/">this original source</a> and scorecards from fights from <a href="https://www.ufc.com/scorecards">this source</a> and others.
 
 ## Features
 - Scraping UFC stats and scorecards.
