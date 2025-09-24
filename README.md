@@ -1,8 +1,20 @@
 # UFC Data Lab
 
-This repository collects, preprocesses, performs OCR and then does EDA on UFC data, including fight-specific stats, fighter-specific stats from <a href="http://ufcstats.com/">this original source</a> and scorecards from fights from <a href="https://www.ufc.com/scorecards">this source</a> and others.
+This repository contains the collection of the UFC fights dataset, consisting of every single UFC fight data, every single UFC fighter's data and all of the UFC fight scorecards. After scraping the data, the scorecard images were OCR parsed with the help of <a href="https://github.com/PaddlePaddle/PaddleOCR">this tool</a> and then the data was further cleaned, and preprocessed. Then, as the time was to start doing EDA on UFC fights dataset, some questions were posed, which were answered in the form of EDA-driven stories by the end of the notebook. In addition, a presentation with findings from the data was created. 
 
-<img src="images/Untitled design (1).png">
+<img src="images/preview.png">
+
+## Results
+Here's something I achieved by the end of this mini project:
+* UFC fight stats scraped
+* UFC scorecards scraped
+* UFC Scorecards OCR-parsed
+* UFC Dataset cleaned
+* Dataset preprocessed
+* Questions posed
+* Answers given
+* Presentation created
+
 
 ## Features
 - Scraping UFC stats and scorecards.
