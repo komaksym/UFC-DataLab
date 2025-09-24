@@ -2,6 +2,8 @@
 
 This repository collects, preprocesses, performs OCR and then does EDA on UFC data, including fight-specific stats, fighter-specific stats from <a href="http://ufcstats.com/">this original source</a> and scorecards from fights from <a href="https://www.ufc.com/scorecards">this source</a> and others.
 
+<img src="images/Untitled design (1).png">
+
 ## Features
 - Scraping UFC stats and scorecards.
 - OCR processing of scorecard images.
