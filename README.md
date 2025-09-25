@@ -1,80 +1,99 @@
-# UFC Data Lab
+# 🥊 UFC Data Lab – Comprehensive UFC Fights Dataset & Analysis  
 
-This repository contains the collection of the UFC fights dataset, consisting of every single UFC fight data, every single UFC fighter's data and all of the UFC fight scorecards. After scraping the data, the scorecard images were OCR parsed with the help of <a href="https://github.com/PaddlePaddle/PaddleOCR">this tool</a> and then the data was further cleaned, and preprocessed. Then, as the time was to start doing EDA on UFC fights dataset, some questions were posed, which were answered in the form of EDA-driven stories by the end of the notebook. In addition, a presentation with findings from the data was created. 
+A complete **UFC fights dataset** project containing every single **UFC fight**, **fighter stats**, and official **fight scorecards**.  
 
-<img src="preview.png">
+Data was scraped, **OCR-parsed** from scorecard images (using [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)), cleaned, and preprocessed for analysis. Finally, the data was explored through **EDA-driven storytelling** and summarized in a **presentation of key findings**.  
 
-## Results
-Here's something I achieved by the end of this mini project:
-* UFC fight stats scraped
-* UFC scorecards scraped
-* UFC Scorecards OCR-parsed
-* UFC Dataset cleaned
-* Dataset preprocessed
-* Questions posed
-* Answers given
-* Presentation created
+<p align="center">
+  <img src="preview.png" alt="UFC Data Analysis Preview">
+</p>
 
+---
 
-## Features
-- Scraping UFC stats and scorecards.
-- OCR processing of scorecard images.
-- Dataset collection
-- Dataset cleaning and preprocessing
-- Organized dataset storage for analysis.
-- Exploratory Data Anslysis.
-- Presentation report on EDA and findings
+## 📊 Project Outcomes  
+By the end of this project, the following were achieved:  
+✔️ UFC fight stats scraped  
+✔️ UFC scorecards scraped  
+✔️ Scorecards OCR-parsed  
+✔️ Dataset cleaned & preprocessed  
+✔️ Final dataset organized for analysis  
+✔️ EDA questions posed & answered  
+✔️ Results presented in a clear report  
 
-## Data sources
-- <a href="http://ufcstats.com/">Fight statistics</a>
-- <a href="https://www.ufc.com/scorecards/">Fight scorecards</a>
+---
 
-## Installation
+## 🔑 Features  
+- 📥 **Scraping UFC Stats & Scorecards** – automated collection of official data  
+- 🔍 **OCR Processing** – extracting structured data from official scorecard images  
+- 🧹 **Data Cleaning & Preprocessing** – ready-to-use datasets for research & analysis  
+- 📂 **Organized Dataset Storage** – structured for smooth EDA workflows  
+- 📈 **Exploratory Data Analysis (EDA)** – insights into UFC fights, fighters, and outcomes  
+- 🎤 **Presentation of Findings** – data-driven stories and visualizations  
+
+---
+
+## 📡 Data Sources  
+- [UFC Official Fight Statistics](http://ufcstats.com/)  
+- [UFC Official Scorecards](https://www.ufc.com/scorecards/)  
+
+---
+
+## ⚙️ Installation  
+Clone the repo and set up the environment:  
+
 ```bash
-1. Clone the repository:
+# 1. Clone repository
 git clone https://github.com/komaksym/UFC-DataLab.git
-2. Install miniconda and ensure it is installed:
+
+# 2. Verify conda installation
 conda --version
-3. Install dependancies and create virtual env:
+
+# 3. Create virtual environment from config
 conda env create -f environment.yml
-4. Activate the environment:
+
+# 4. Activate the environment
 conda activate paddle_env
 ```
+---
 
-## Usage
+## 📂 Directory Structure  
+
 ```bash
-1. To scrape  UFC stats:
-cd UFC_DataLab/src/scraping/ufc_stats
-scrapy crawl stats_spider
-
-2. To scrape UFC scorecards:
-cd UFC_DataLab/src/scraping/ufc_scorecards
-scrapy crawl scorecards_spider
-
-3. To OCR parse the scraped scorecards:
-Move your scraped data to the datasets/scorecards/scraped_scorecard_images/new_version_scorecards/
-python src/scorecard_OCR/ocr.py
-
-4. To run tests:
-pytest
+UFC-DataLab/
+├── data/                     
+│   ├── external_data/         # External reference datasets
+│   ├── merged_stats_n_scorecards/   # Final merged dataset
+│   ├── scorecards/            # Raw + OCR-processed scorecards
+│   ├── src/                   # Data-related scripts & notebooks
+│   └── stats/                 # UFC fight statistics
+│
+├── src/                       
+│   ├── EDA/                   # Exploratory Data Analysis notebooks
+│   ├── scorecard_OCR/         # OCR parsing scripts
+│   └── scraping/              # Web scraping spiders
+│
+└── tests/                     
+    ├── OCR_parsing/           # OCR unit tests
+    └── scrapers/              # Scraper unit tests
 ```
 
-## Directory Structure
-```bash 
-.
-├── data                                       # Datasets & scripts related to working with them
-│   ├── external_data                          # External data that we use besides our own scraped datasets
-│   ├── merged_stats_n_scorecards              # Final merged dataset 
-│   ├── scorecards                             # Scorecards of the fights
-│   ├── src                                    # Scripts / notebooks related to working with the data
-│   └── stats                                  # Fight statistics
-├── src                                        # Source code directory
-│   ├── EDA                                    # Exploratory Data Analysis
-│   ├── scorecard_OCR                          # Scripts related to OCR parsing the scraped scorecards
-│   └── scraping                               # Scraping scripts
-└── tests                                      # Unit tests
-    ├── OCR_parsing                            # Tests for OCR parsing scripts
-    └── scrapers                               # Tests for scrapers
-```
-## Contribution
-In the case of contribution, feel free to open an Issue or a PR! :)
+## 🤝 Contributing  
+
+Contributions are welcome!  
+
+- Open an **Issue** to report bugs or request features  
+- Submit a **Pull Request (PR)** for improvements  
+
+---
+
+## ⭐ Why This Project Matters  
+
+This project provides one of the **most complete UFC datasets** available — combining official fight stats with **OCR-parsed scorecards**. It opens the door for:  
+
+- Sports analytics & machine learning models  
+- UFC win prediction research  
+- Fighter performance tracking  
+- Data storytelling around MMA  
+
+---
+👉 If you find this project useful, don’t forget to **⭐ star this repository** to support its growth!  
