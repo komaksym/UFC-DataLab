@@ -7,10 +7,10 @@ class PathConfig:
     PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 
     INPUT_PATH: Path = (
-        PROJECT_ROOT / "src/datasets/scorecards/scraped_scorecard_images/new_version_scorecards/"
+        PROJECT_ROOT / "data/scorecards/scraped_scorecard_images/new_version_scorecards_v1/"
     )
     OUTPUT_PATH: Path = (
-        PROJECT_ROOT / "src/datasets/scorecards/OCR_parsed_scorecards/parsed_scorecards_new_version.csv"
+        PROJECT_ROOT / "data/scorecards/OCR_parsed_scorecards/parsed_scorecards_new_version.csv"
     )
 
     def validate_paths(self) -> None:
