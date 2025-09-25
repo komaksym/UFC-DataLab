@@ -61,37 +61,20 @@ pytest
 
 ## Directory Structure
 ```bash 
-. 
-├── src                                        # Source files
+.
+├── data                                       # Datasets & scripts related to working with them
+│   ├── external_data                          # External data that we use besides our own scraped datasets
+│   ├── merged_stats_n_scorecards              # Final merged dataset 
+│   ├── scorecards                             # Scorecards of the fights
+│   ├── src                                    # Scripts / notebooks related to working with the data
+│   └── stats                                  # Fight statistics
+├── src                                        # Source code directory
 │   ├── EDA                                    # Exploratory Data Analysis
-│   ├── datasets                               # Datasets
-│   │   ├── merged_stats_n_scorecards          # Merged stats and scorecards dataset
-│   │   ├── scorecards                         # Scorecards data
-│   │   │   ├── OCR_parsed_scorecards          # OCR parsed scorecards
-│   │   │   └── scraped_scorecard_images       # Scraped scorecards
-│   │   └── stats                              # Fight stats data
-│   ├── scorecard_OCR                          # Scorecard OCR script
+│   ├── scorecard_OCR                          # Scripts related to OCR parsing the scraped scorecards
 │   └── scraping                               # Scraping scripts
-│       ├── ufc_scorecards_scraping            # Scorecards scraper
-│       │   └── ufc_scorecards_scraping        # Scorecards scraper
-│       │       └── spiders                    # Scorecards spider
-│       └── ufc_stats_scraping                 # Stats scraper
-│           └── ufcstats_scraping              # Stats scraper
-│               └── spiders                    # Stats spider
-└── tests                                      # Tests
-    ├── OCR_parsing                            # OCR tests
-    │   └── mock_scorecard                     # Mock data to test OCR on
-    └── scrapers                               # Scraper tests
-        ├── test_scorecards_scraper            # Scorecard scraper testing
-        │   └── mock_pages                     # Mock data to test scorecard scraper on
-        │       ├── mock_event_page            # Mock single event page
-        │       ├── mock_events_page           # Mock events page
-        │       └── mock_scorecard             # Mock scorecard
-        └── test_stats_scraper                 # Stats scraper testing
-            └── mock_pages                     # Mock data to test stats scraper on
-                ├── mock_event_page            # Mock single event page
-                ├── mock_events_page           # Mock events page
-                └── mock_fight_page            # Mock single fight page
+└── tests                                      # Unit tests
+    ├── OCR_parsing                            # Tests for OCR parsing scripts
+    └── scrapers                               # Tests for scrapers
 ```
 ## Contribution
 In the case of contribution, feel free to open an Issue or a PR! :)
