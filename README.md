@@ -44,16 +44,16 @@ conda activate paddle_env
 ## Usage
 ```bash
 1. To scrape  UFC stats:
-cd src/scraping/ufc_stats_scraping
+cd src/scraping/ufc_stats
 scrapy crawl stats_spider
 
 2. To scrape UFC scorecards:
-cd src/scraping/ufc_scorecards_scraping
+cd src/scraping/ufc_scorecards
 scrapy crawl scorecards_spider
 
 3. To OCR parse the scraped scorecards:
 Move your scraped data to the datasets/scorecards/scraped_scorecard_images/new_version_scorecards/
-python src/scorecard_OCR/app.py
+python src/scorecard_OCR/ocr.py
 
 4. To run tests:
 pytest
