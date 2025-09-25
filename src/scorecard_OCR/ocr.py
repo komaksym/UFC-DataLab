@@ -7,7 +7,7 @@ import pandas as pd
 from paddleocr import PaddleOCR
 from tqdm import tqdm
 from multiprocessing import Pool
-from .config import PathConfig
+from config import PathConfig
 from dataclasses import field
 
 
