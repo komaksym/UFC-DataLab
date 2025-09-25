@@ -26,7 +26,6 @@ dependencies:
   - importlib_resources=6.4.0
   - incremental=22.10.0
   - iniconfig=1.1.1
-  - intel-openmp=2023.1.0
   - itemadapter=0.3.0
   - itemloaders=1.1.0
   - jmespath=1.0.1
