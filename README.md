@@ -25,7 +25,7 @@ Here's something I achieved by the end of this mini project:
 - Exploratory Data Anslysis.
 - Presentation report on EDA and findings
 
-## Data source
+## Data sources
 - <a href="http://ufcstats.com/">Fight statistics</a>
 - <a href="https://www.ufc.com/scorecards/">Fight scorecards</a>
 
