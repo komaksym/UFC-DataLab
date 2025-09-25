@@ -19,14 +19,21 @@ Here's something I achieved by the end of this mini project:
 ## Features
 - Scraping UFC stats and scorecards.
 - OCR processing of scorecard images.
+- Dataset collection
+- Dataset cleaning and preprocessing
 - Organized dataset storage for analysis.
 - Exploratory Data Anslysis.
+- Presentation report on EDA and findings
+
+## Data source
+- <a href="http://ufcstats.com/">Fight statistics</a>
+- <a href="https://www.ufc.com/scorecards/">Fight scorecards</a>
 
 ## Installation
 ```bash
 1. Clone the repository:
 git clone https://github.com/komaksym/UFC-DataLab.git
-2. Ensure conda is installed:
+2. Install miniconda and ensure it is installed:
 conda --version
 3. Install dependancies and create virtual env:
 conda env create -f environment.txt
@@ -86,3 +93,5 @@ pytest
                 ├── mock_events_page           # Mock events page
                 └── mock_fight_page            # Mock single fight page
 ```
+## Contribution
+In the case of contribution, feel free to open an Issue or a PR! :)
