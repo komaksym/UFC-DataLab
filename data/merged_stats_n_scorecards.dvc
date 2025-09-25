@@ -1,6 +1,0 @@
-outs:
-- md5: a6da51d0a29f77aa8d09f7e003ab3db2.dir
-  size: 3545784
-  nfiles: 2
-  hash: md5
-  path: merged_stats_n_scorecards
