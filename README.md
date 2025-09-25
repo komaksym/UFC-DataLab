@@ -36,7 +36,7 @@ git clone https://github.com/komaksym/UFC-DataLab.git
 2. Install miniconda and ensure it is installed:
 conda --version
 3. Install dependancies and create virtual env:
-conda env create -f environment.txt
+conda env create -f environment.yml
 4. Activate the environment:
 conda activate paddle_env
 ```
