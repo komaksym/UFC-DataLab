@@ -44,11 +44,11 @@ conda activate paddle_env
 ## Usage
 ```bash
 1. To scrape  UFC stats:
-cd src/scraping/ufc_stats
+cd UFC_DataLab/src/scraping/ufc_stats
 scrapy crawl stats_spider
 
 2. To scrape UFC scorecards:
-cd src/scraping/ufc_scorecards
+cd UFC_DataLab/src/scraping/ufc_scorecards
 scrapy crawl scorecards_spider
 
 3. To OCR parse the scraped scorecards:
