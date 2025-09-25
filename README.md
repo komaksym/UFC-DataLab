@@ -6,7 +6,6 @@ UFC is the **largest MMA promotion** in the world, it is in top 5-10 sports prom
 </p>
 
 ---
-
 This repository is a complete **UFC fights dataset** project containing every single **UFC fight**, **fighter stats**, and official **fight scorecards**.  
 
 Data was scraped, **OCR-parsed** from scorecard images (using [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)), cleaned, and preprocessed for analysis. Finally, the data was explored through **EDA-driven storytelling** and summarized in a **presentation of key findings**.  
@@ -15,7 +14,6 @@ Data was scraped, **OCR-parsed** from scorecard images (using [PaddleOCR](https:
   <img src="preview.png" alt="UFC Data Analysis Preview">
 </p>
 
----
 
 ## 📊 Project Outcomes  
 By the end of this project, the following were achieved:  
@@ -27,7 +25,6 @@ By the end of this project, the following were achieved:
 ✔️ EDA questions posed & answered  
 ✔️ Results presented in a clear report  
 
----
 
 ## 🔑 Features  
 - 📥 **Scraping UFC Stats & Scorecards** – automated collection of official data  
@@ -37,13 +34,11 @@ By the end of this project, the following were achieved:
 - 📈 **Exploratory Data Analysis (EDA)** – insights into UFC fights, fighters, and outcomes  
 - 🎤 **Presentation of Findings** – data-driven stories and visualizations  
 
----
 
 ## 📡 Data Sources  
 - [UFC Official Fight Statistics](http://ufcstats.com/)  
 - [UFC Official Scorecards](https://www.ufc.com/scorecards/)  
 
----
 
 ## ⚙️ Installation  
 Clone the repo and set up the environment:  
@@ -61,7 +56,6 @@ conda env create -f environment.yml
 # 4. Activate the environment
 conda activate paddle_env
 ```
----
 
 ## 📂 Directory Structure  
 
@@ -91,7 +85,6 @@ Contributions are welcome!
 - Open an **Issue** to report bugs or request features  
 - Submit a **Pull Request (PR)** for improvements  
 
----
 
 ## ⭐ Why This Project Matters  
 
@@ -102,5 +95,4 @@ This project provides one of the **most complete UFC datasets** available — co
 - Fighter performance tracking  
 - Data storytelling around MMA  
 
----
 👉 If you find this project useful, don’t forget to **⭐ star this repository** to support its growth!  
