@@ -1,5 +1,5 @@
 # 🥊 UFC Data Lab – Comprehensive UFC Fights Dataset & Analysis  
-UFC is the **largest MMA promotion** in the world, it is in top 5-10 sports promotion in the US, and **growing**! It **outgrew** such leagues as NBA, F1, Champions League, NHL, NFL, MLB, and others in terms of relative pct growth over the last 7 years. 
+UFC is the **largest MMA promotion** in the world, it is in the top 5-10 sports promotions in the US, and **growing**! It **outgrew** such leagues as the NBA, F1, Champions League, NHL, NFL, MLB, and others in terms of relative pct growth over the last 7 years. 
 
 <p align="center">
   <img src="leaguesgrowth.jpg" alt="UFC Data Analysis Preview">
