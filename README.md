@@ -2,7 +2,7 @@
 UFC is the **largest MMA promotion** in the world, it is in the top 5-10 sports promotions in the US, and **growing**! It **outgrew** such leagues as the NBA, F1, Champions League, NHL, NFL, MLB, and others in terms of relative pct growth over the last 7 years. 
 
 <p align="center">
-  <img src="leaguesgrowth.jpg" alt="UFC Data Analysis Preview">
+  <img src="images/leaguesgrowth.jpg" alt="UFC Data Analysis Preview">
 </p>
 
 ---
@@ -11,7 +11,7 @@ This repository is a complete **UFC fights dataset** project containing every si
 Data was scraped, **OCR-parsed** from scorecard images (using [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)), cleaned, and preprocessed for analysis. Finally, the data was explored through **EDA-driven storytelling** and summarized in a **presentation of key findings**.  
 
 <p align="center">
-  <img src="preview.png" alt="UFC Data Analysis Preview">
+  <img src="images/preview.png" alt="UFC Data Analysis Preview">
 </p>
 
 
