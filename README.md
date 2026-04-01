@@ -25,6 +25,12 @@ By the end of this project, the following were achieved:
 ✔️ EDA questions posed & answered  
 ✔️ Results presented in a clear report  
 
+## 📁 Dataset Outputs
+- `data/stats/stats_raw.csv` contains the scraped all-bouts UFC Stats export, including decisive fights, draws, and no contests.
+- `data/stats/stats_processed.csv` is the decisive-only analytical table built around winner/loser and delta features.
+- `data/stats/stats_processed_all_bouts.csv` is the canonical processed all-bouts table that preserves `red/blue` columns and adds `fight_outcome`.
+- `data/merged_stats_n_scorecards/merged_stats_n_scorecards.csv` is the all-bouts stats-plus-scorecards merge and carries `fight_outcome`.
+
 
 ## 🔑 Features  
 - 📥 **Scraping UFC Stats & Scorecards** – automated collection of official data  
@@ -57,6 +63,18 @@ conda env create -f environment.yml
 conda activate paddle_env
 ```
 
+## 🔁 Dataset Regeneration
+
+```bash
+# Refresh UFC Stats raw data
+cd src/scraping/ufc_stats
+python3 -m scrapy crawl stats_spider -O ../../../../tmp/ufc_stats_refresh.csv
+
+# Rebuild processed stats and merged scorecards outputs
+cd ../../..
+python3 -m src.data_processing.stats_processing
+```
+
 ## 📂 Directory Structure  
 
 ```bash
@@ -66,10 +84,11 @@ UFC-DataLab/
 │   ├── merged_stats_n_scorecards/   # Final merged dataset
 │   ├── scorecards/            # Raw + OCR-processed scorecards
 │   ├── src/                   # Data-related scripts & notebooks
-│   └── stats/                 # UFC fight statistics
+│   └── stats/                 # Raw, decisive-only processed, and all-bouts processed UFC fight statistics
 │
 ├── src/                       
 │   ├── EDA/                   # Exploratory Data Analysis notebooks
+│   ├── data_processing/       # Scripted dataset processing utilities
 │   ├── scorecard_OCR/         # OCR parsing scripts
 │   └── scraping/              # Web scraping spiders
 │

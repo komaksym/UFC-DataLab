@@ -17,6 +17,7 @@ class FightData(scrapy.Item):
     # Fight results
     red_fighter_result = scrapy.Field()
     blue_fighter_result = scrapy.Field()
+    fight_outcome = scrapy.Field()
     method = scrapy.Field()
     round = scrapy.Field()
     time = scrapy.Field()

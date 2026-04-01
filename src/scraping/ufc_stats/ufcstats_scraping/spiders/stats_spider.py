@@ -32,7 +32,7 @@ class StatsSpider(scrapy.Spider):
             "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall(),
         }
 
-        fights_links: List[str] = response.css("a.b-flag.b-flag_style_green::attr(href)").getall()
+        fights_links: List[str] = response.css("tr.js-fight-details-click::attr(data-link)").getall()
         for fight_link in fights_links:
             yield scrapy.Request(
                 url=fight_link,

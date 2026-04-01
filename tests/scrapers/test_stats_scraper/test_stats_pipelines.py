@@ -119,6 +119,7 @@ class TestStatsPipeline:
         self.fight_data_processed["event_date"] = "December 14, 2024"
         self.fight_data_processed["event_location"] = "Tampa, Florida, USA"
         self.fight_data_processed["event_name"] = "UFC Fight Night: Covington vs. Buckley"
+        self.fight_data_processed["fight_outcome"] = "-"
         self.fight_data_processed["method"] = "TKO - Doctor's Stoppage"
         self.fight_data_processed["red_fighter_KD"] = "0"
         self.fight_data_processed["red_fighter_TD"] = "1 of 8"
@@ -309,6 +310,7 @@ class TestStatsPipeline:
         self.fight_data_processed["event_date"] = "December 14, 2024"
         self.fight_data_processed["event_location"] = "Tampa, Florida, USA"
         self.fight_data_processed["event_name"] = "UFC Fight Night: Covington vs. Buckley"
+        self.fight_data_processed["fight_outcome"] = "blue_win"
         self.fight_data_processed["method"] = "TKO - Doctor's Stoppage"
         self.fight_data_processed["red_fighter_KD"] = "0"
         self.fight_data_processed["red_fighter_TD"] = "1 of 8"
@@ -351,3 +353,42 @@ class TestStatsPipeline:
             f"Expected: {self.fight_data_processed}\n"
             f"Got: {self.fight_data_raw}"
         )
+
+    @pytest.mark.parametrize(
+        ("red_result", "blue_result", "expected_outcome"),
+        [
+            ("W", "L", "red_win"),
+            ("L", "W", "blue_win"),
+            ("D", "D", "draw"),
+            ("NC", "NC", "no_contest"),
+            ("draw", "draw", "draw"),
+            ("no contest", "n/c", "no_contest"),
+        ],
+    )
+    def test_process_fight_outcome(
+        self, red_result: str, blue_result: str, expected_outcome: str
+    ) -> None:
+        """Result markers should map into the canonical fight outcome values."""
+
+        item = FightData()
+        item["red_fighter_result"] = red_result
+        item["blue_fighter_result"] = blue_result
+
+        adapter = ItemAdapter(item)
+        self.pipeline.normalize_results(adapter)
+        self.pipeline.process_fight_outcome(adapter)
+
+        assert adapter["fight_outcome"] == expected_outcome
+
+    def test_process_fight_outcome_rejects_unknown_result_combinations(self) -> None:
+        """Unexpected result pairs should fail loudly."""
+
+        item = FightData()
+        item["red_fighter_result"] = "W"
+        item["blue_fighter_result"] = "W"
+
+        adapter = ItemAdapter(item)
+        self.pipeline.normalize_results(adapter)
+
+        with pytest.raises(ValueError, match="Unsupported fight outcome combination"):
+            self.pipeline.process_fight_outcome(adapter)
