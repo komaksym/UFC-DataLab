@@ -1,5 +1,6 @@
+from datetime import datetime
 from functools import reduce
-from typing import Any, Dict, Iterator, List
+from typing import Any, Dict, Iterator, List, Optional
 
 import scrapy
 from scrapy.http.request import Request
@@ -9,18 +10,61 @@ from ..items import FightData
 
 
 class StatsSpider(scrapy.Spider):
-    """Spider for scraping UFC fight statistics."""
+    """Spider for scraping UFC fight statistics.
+
+    Supports incremental scraping via the ``since`` argument.  Pass a date in
+    ``DD/MM/YYYY`` format to only scrape events *after* that date::
+
+        scrapy crawl stats_spider -a since=14/03/2026
+
+    When ``since`` is omitted the spider performs a full scrape.
+    """
 
     name: str = "stats_spider"
     allowed_domains: List[str] = ["ufcstats.com"]
     start_urls: List[str] = ["http://ufcstats.com/statistics/events/completed?page=all"]
 
+    def __init__(self, *args, since: Optional[str] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if since is not None:
+            self.since: Optional[datetime] = datetime.strptime(since, "%d/%m/%Y")
+            self.logger.info("Incremental mode: scraping events after %s", self.since.date())
+        else:
+            self.since = None
+
+    @staticmethod
+    def _parse_listing_date(text: str) -> Optional[datetime]:
+        """Parse a date string like 'March 28, 2026' from the events listing."""
+        try:
+            return datetime.strptime(text.strip(), "%B %d, %Y")
+        except (ValueError, AttributeError):
+            return None
+
     def parse(self, response: Response, **kwargs) -> Iterator[Request]:
-        """Extract and follow links to all UFC events."""
+        """Extract and follow links to all UFC events.
 
-        events_links: List[str] = response.css("a.b-link.b-link_style_black::attr(href)").getall()
+        When running in incremental mode, events at or before the ``since``
+        date are skipped entirely — no event or fight pages are fetched for
+        them.
+        """
 
-        for event_link in events_links:
+        rows = response.css("tr.b-statistics__table-row")
+        for row in rows:
+            event_link = row.css("a.b-link.b-link_style_black::attr(href)").get()
+            if not event_link:
+                continue
+
+            if self.since is not None:
+                date_text = row.css("span.b-statistics__date::text").get()
+                event_date = self._parse_listing_date(date_text)
+                if event_date is not None and event_date <= self.since:
+                    self.logger.info(
+                        "Skipping event at %s (at or before cutoff %s)",
+                        event_date.date(),
+                        self.since.date(),
+                    )
+                    continue
+
             yield scrapy.Request(url=event_link, callback=self.parse_event)
 
     def parse_event(self, response: Response) -> Iterator[Request]:
