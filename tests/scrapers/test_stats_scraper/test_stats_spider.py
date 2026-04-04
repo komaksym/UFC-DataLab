@@ -26,6 +26,9 @@ class TestStatsSpider:
         self.mock_pages = {
             "events_page": create_full_path("mock_pages/mock_events_page/events_page.html"),
             "single_event": create_full_path("mock_pages/mock_event_page/single_event_page.html"),
+            "result_variants_event": create_full_path(
+                "mock_pages/mock_event_page/result_variants_event_page.html"
+            ),
             "single_fight": create_full_path("mock_pages/mock_fight_page/fight_page.html"),
         }
 
@@ -95,6 +98,19 @@ class TestStatsSpider:
             f"All URLs should start with 'http://ufcstats.com/fight-details/'\n"
             f"Invalid URLs: {[r.url for r in responses if not r.url.startswith('http://ufcstats.com/fight-details/')]}"
         )
+
+    def test_parse_event_uses_row_links_for_non_decisive_fights(self) -> None:
+        """Event parsing should follow row detail links regardless of result styling."""
+
+        responses: List[Request] = list(
+            self.spider.parse_event(self.mock_response(self.mock_pages["result_variants_event"]))
+        )
+
+        assert [response.url for response in responses] == [
+            "http://ufcstats.com/fight-details/decisive-fight",
+            "http://ufcstats.com/fight-details/draw-fight",
+            "http://ufcstats.com/fight-details/no-contest-fight",
+        ]
 
     @pytest.fixture
     def expected_parsed_fight_data(self):
