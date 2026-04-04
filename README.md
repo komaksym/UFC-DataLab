@@ -25,6 +25,9 @@ By the end of this project, the following were achieved:
 ✔️ EDA questions posed & answered  
 ✔️ Results presented in a clear report  
 
+## 🔄 Dataset Updates
+The datasets are updated every 3 months to include the latest UFC events.
+
 ## 📁 Dataset Outputs
 - `data/stats/stats_raw.csv` contains the scraped all-bouts UFC Stats export, including decisive fights, draws, and no contests.
 - `data/stats/stats_processed.csv` is the decisive-only analytical table built around winner/loser and delta features.
