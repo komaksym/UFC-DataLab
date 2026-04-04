@@ -112,6 +112,31 @@ class TestStatsSpider:
             "http://ufcstats.com/fight-details/no-contest-fight",
         ]
 
+    def test_parse_incremental_skips_old_events(self) -> None:
+        """When ``since`` is set, events at or before that date are skipped."""
+
+        # Mock events page has events from December 14, 2024 down to earlier dates.
+        # Setting since to November 16 should skip Nov 16 and everything before it.
+        spider = StatsSpider(since="16/11/2024")
+        responses: List[Request] = list(spider.parse(self.mock_response(self.start_urls)))
+
+        full_spider = StatsSpider()
+        all_responses: List[Request] = list(full_spider.parse(self.mock_response(self.start_urls)))
+
+        assert len(responses) < len(all_responses), (
+            "Incremental spider should yield fewer events than full spider"
+        )
+        # Events on or before Nov 16 should be excluded
+        assert len(responses) > 0, "Should still yield some recent events"
+
+    def test_parse_full_scrape_when_since_omitted(self) -> None:
+        """Without ``since``, all events are scraped."""
+
+        spider = StatsSpider()
+        assert spider.since is None
+        responses: List[Request] = list(spider.parse(self.mock_response(self.start_urls)))
+        assert len(responses) > 0
+
     @pytest.fixture
     def expected_parsed_fight_data(self):
         """Fixture providing expected parsed fight data."""
