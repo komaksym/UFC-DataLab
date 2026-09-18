@@ -42,6 +42,7 @@ class StatsPipeline:
         try:
             adapter = ItemAdapter(item)
             self.clean_text_fields(adapter)
+            self.validate_identity(adapter)
             self.normalize_results(adapter)
             self.process_fight_outcome(adapter)
 
@@ -61,6 +62,21 @@ class StatsPipeline:
             self.errors += 1
             logger.error(f"Error processing item: {str(e)}")
             raise
+
+    def validate_identity(self, adapter: ItemAdapter) -> None:
+        """Fail closed when a newly scraped UFCStats row has no stable fight ID."""
+
+        provenance = str(adapter.get("source_provenance", "-")).strip().lower()
+        fight_id = str(adapter.get("fight_id", "-")).strip()
+        if provenance != "ufcstats":
+            return
+        if fight_id in {"", "-"}:
+            raise ValueError("Missing stable fight_id for newly scraped UFCStats record")
+
+        adapter["identity_status"] = "stable"
+        record_state = str(adapter.get("record_state", "-")).strip()
+        if record_state in {"", "-"}:
+            adapter["record_state"] = "valid"
 
     def validate_data(self, adapter: ItemAdapter) -> bool:
         """Validate critical data fields."""

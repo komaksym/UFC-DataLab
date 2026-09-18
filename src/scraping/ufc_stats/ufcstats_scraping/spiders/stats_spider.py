@@ -1,6 +1,7 @@
 from datetime import datetime
 from functools import reduce
 from typing import Any, Dict, Iterator, List, Optional
+from urllib.parse import urlparse
 
 import scrapy
 from scrapy.http.request import Request
@@ -40,6 +41,25 @@ class StatsSpider(scrapy.Spider):
         except (ValueError, AttributeError):
             return None
 
+    @staticmethod
+    def _is_ufcstats_url(url: str) -> bool:
+        """Return whether a response URL represents a live UFCStats source page."""
+
+        return (urlparse(url).hostname or "").lower() == "ufcstats.com"
+
+    @staticmethod
+    def _source_id(url: Optional[str], resource: str) -> Optional[str]:
+        """Extract a stable UFCStats identifier from one of its source URLs."""
+
+        if not url:
+            return None
+        marker = f"/{resource}/"
+        path = urlparse(url).path
+        if marker not in path:
+            return None
+        value = path.split(marker, 1)[1].split("/", 1)[0].strip()
+        return value or None
+
     def parse(self, response: Response, **kwargs) -> Iterator[Request]:
         """Extract and follow links to all UFC events.
 
@@ -75,6 +95,10 @@ class StatsSpider(scrapy.Spider):
             "date": response.xpath("/html/body/section/div/div/div[1]/ul/li[1]/text()").getall(),
             "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall(),
         }
+        event_id = self._source_id(response.url, "event-details")
+        if self._is_ufcstats_url(response.url) and event_id:
+            event_data["event_id"] = event_id
+            event_data["event_url"] = response.url
 
         fights_links: List[str] = response.css("tr.js-fight-details-click::attr(data-link)").getall()
         for fight_link in fights_links:
@@ -96,6 +120,22 @@ class StatsSpider(scrapy.Spider):
         fight_data_item["event_date"] = event_data["date"]
         fight_data_item["event_location"] = event_data["location"]
 
+        if self._is_ufcstats_url(response.url):
+            fight_data_item["fight_url"] = response.url
+            fight_data_item["source_provenance"] = "ufcstats"
+            fight_data_item["corner_orientation"] = "red_blue"
+            fight_id = self._source_id(response.url, "fight-details")
+            if fight_id:
+                fight_data_item["fight_id"] = fight_id
+                fight_data_item["identity_status"] = "stable"
+            else:
+                fight_data_item["identity_status"] = "missing"
+
+            if event_data.get("event_id"):
+                fight_data_item["event_id"] = event_data["event_id"]
+            if event_data.get("event_url"):
+                fight_data_item["event_url"] = event_data["event_url"]
+
         # Parse general fight data
         fight_data_item = self.parse_fight_general_data(response, fight_data_item)
         # Parse detailed fight data
@@ -112,6 +152,24 @@ class StatsSpider(scrapy.Spider):
         """Parses general fight data like names, bout type, time format, referee, etc."""
 
         general_fight_base_path = "/html/body/section/div/div/div"
+
+        if self._is_ufcstats_url(response.url):
+            red_fighter_url = response.xpath(
+                f"{general_fight_base_path}[1]/div[1]/div/h3/a/@href"
+            ).get()
+            blue_fighter_url = response.xpath(
+                f"{general_fight_base_path}[1]/div[2]/div/h3/a/@href"
+            ).get()
+            if red_fighter_url:
+                fight_data_item["red_fighter_url"] = red_fighter_url
+                red_fighter_id = self._source_id(red_fighter_url, "fighter-details")
+                if red_fighter_id:
+                    fight_data_item["red_fighter_id"] = red_fighter_id
+            if blue_fighter_url:
+                fight_data_item["blue_fighter_url"] = blue_fighter_url
+                blue_fighter_id = self._source_id(blue_fighter_url, "fighter-details")
+                if blue_fighter_id:
+                    fight_data_item["blue_fighter_id"] = blue_fighter_id
 
         fight_data_item["red_fighter_name"] = response.xpath(
             f"{general_fight_base_path}[1]/div[1]/div/h3/a/text()"

@@ -34,14 +34,20 @@ class TestStatsSpider:
 
         self.start_urls = self.mock_pages["events_page"]
 
-    def mock_response(self, path: Path, metadata: Optional[Dict[str, Any]] = None) -> HtmlResponse:
+    def mock_response(
+        self,
+        path: Path,
+        metadata: Optional[Dict[str, Any]] = None,
+        url: Optional[str] = None,
+    ) -> HtmlResponse:
         """Create a mock HtmlResponse object for testing."""
 
         with open(path, "r") as f:
             html_content: str = f.read()
 
-        # Mock url
-        url: str = f"file://{path}"
+        # Existing tests use local files; identity tests can supply the source URL.
+        if url is None:
+            url = f"file://{path}"
 
         # Ensuring metadata is a dictionary
         if metadata is None:
@@ -111,6 +117,37 @@ class TestStatsSpider:
             "http://ufcstats.com/fight-details/draw-fight",
             "http://ufcstats.com/fight-details/no-contest-fight",
         ]
+
+    def test_source_identity_is_retained_end_to_end(self) -> None:
+        """UFCStats IDs, URLs, provenance, and red/blue orientation survive parsing."""
+
+        event_url = "http://ufcstats.com/event-details/event-309"
+        event_response = self.mock_response(self.mock_pages["single_event"], url=event_url)
+        fight_request = list(self.spider.parse_event(event_response))[0]
+
+        assert fight_request.meta["event_data"]["event_id"] == "event-309"
+        assert fight_request.meta["event_data"]["event_url"] == event_url
+
+        fight_response = self.mock_response(
+            self.mock_pages["single_fight"],
+            metadata=fight_request.meta,
+            url=fight_request.url,
+        )
+        fight = list(self.spider.parse_fight(fight_response))[0]
+
+        assert fight["fight_id"] == "b35e47f2f58ef026"
+        assert fight["event_id"] == "event-309"
+        assert fight["red_fighter_id"] == "07f72a2a7591b409"
+        assert fight["blue_fighter_id"] == "d28dee5c705991df"
+        assert fight["fight_url"] == fight_request.url
+        assert fight["event_url"] == event_url
+        assert fight["red_fighter_url"].endswith("/07f72a2a7591b409")
+        assert fight["blue_fighter_url"].endswith("/d28dee5c705991df")
+        assert fight["corner_orientation"] == "red_blue"
+        assert fight["source_provenance"] == "ufcstats"
+        assert fight["identity_status"] == "stable"
+        assert fight["red_fighter_name"].strip() == "Jon Jones"
+        assert fight["blue_fighter_name"].strip() == "Stipe Miocic"
 
     def test_parse_incremental_skips_old_events(self) -> None:
         """When ``since`` is set, events at or before that date are skipped."""

@@ -30,7 +30,29 @@ RESULT_ALIASES = {
     "NO CONTEST": "NC",
     "NO-CONTEST": "NC",
 }
-RAW_STATS_COLUMN_ORDER = [
+SOURCE_IDENTITY_COLUMNS = [
+    "fight_id",
+    "event_id",
+    "red_fighter_id",
+    "blue_fighter_id",
+    "fight_url",
+    "event_url",
+    "red_fighter_url",
+    "blue_fighter_url",
+    "corner_orientation",
+    "source_provenance",
+    "identity_status",
+    "record_state",
+]
+CORNER_IDENTITY_COLUMNS = {
+    "red_fighter_id",
+    "blue_fighter_id",
+    "red_fighter_url",
+    "blue_fighter_url",
+}
+DECISIVE_IDENTITY_COLUMN_ORDER = SOURCE_IDENTITY_COLUMNS.copy()
+
+RAW_STATS_COLUMN_ORDER = SOURCE_IDENTITY_COLUMNS + [
     "red_fighter_name",
     "blue_fighter_name",
     "event_date",
@@ -92,7 +114,7 @@ RAW_STATS_COLUMN_ORDER = [
     "red_fighter_sig_str_ground_pct",
     "blue_fighter_sig_str_ground_pct",
 ]
-LEGACY_PROCESSED_COLUMN_ORDER = [
+LEGACY_PROCESSED_COLUMN_ORDER = DECISIVE_IDENTITY_COLUMN_ORDER + [
     "winner_name",
     "loser_name",
     "event_date",
@@ -151,6 +173,45 @@ class DatasetPaths:
     merged_stats_scorecards: Path = (
         project_root / "data/merged_stats_n_scorecards/merged_stats_n_scorecards.csv"
     )
+
+
+def _identity_value_missing(value: object) -> bool:
+    """Return whether a source-identity value is absent or a repository placeholder."""
+
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value.strip() in {"", "-"}
+    try:
+        return bool(pd.isna(value))
+    except (TypeError, ValueError):
+        return False
+
+
+def ensure_source_identity(stats: pd.DataFrame) -> pd.DataFrame:
+    """Preserve stable identity and visibly warn on genuinely pre-ID rows."""
+
+    stats = stats.copy()
+    for column in SOURCE_IDENTITY_COLUMNS:
+        if column not in stats.columns:
+            stats[column] = pd.NA
+
+    missing_fight_id = stats["fight_id"].map(_identity_value_missing)
+    stats["identity_status"] = "stable"
+    stats.loc[missing_fight_id, "identity_status"] = "legacy_fallback"
+
+    missing_record_state = stats["record_state"].map(_identity_value_missing)
+    stats.loc[missing_record_state, "record_state"] = "valid"
+    legacy_valid = missing_fight_id & stats["record_state"].eq("valid")
+    stats.loc[legacy_valid, "record_state"] = "warning"
+
+    missing_provenance = stats["source_provenance"].map(_identity_value_missing)
+    stats.loc[(~missing_fight_id) & missing_provenance, "source_provenance"] = "ufcstats"
+    stats.loc[missing_fight_id & missing_provenance, "source_provenance"] = "legacy_historical"
+
+    missing_orientation = stats["corner_orientation"].map(_identity_value_missing)
+    stats.loc[missing_orientation, "corner_orientation"] = "red_blue"
+    return stats
 
 
 def normalize_result_marker(value: object) -> str:
@@ -214,7 +275,10 @@ def derive_fight_outcome(red_result: object, blue_result: object) -> str:
 def ensure_fight_outcome(stats: pd.DataFrame) -> pd.DataFrame:
     """Normalize result columns and ensure the raw stats frame has fight outcomes."""
 
-    stats = stats.copy()
+    stats = ensure_source_identity(stats)
+    if stats.empty:
+        return reorder_columns(stats, RAW_STATS_COLUMN_ORDER)
+
     stats["event_date"] = stats["event_date"].apply(normalize_event_date_value)
     for fighter_name_col in ("red_fighter_name", "blue_fighter_name"):
         stats[fighter_name_col] = stats[fighter_name_col].apply(
@@ -515,6 +579,8 @@ def build_processed_all_bouts(
 def rename_condition(column: str) -> str:
     """Rename red/blue columns into winner/loser columns."""
 
+    if column in CORNER_IDENTITY_COLUMNS:
+        return column
     if column.startswith("red_fighter_"):
         return column.replace("red_fighter_", "winner_")
     if column.startswith("blue_fighter_"):
@@ -530,6 +596,8 @@ def set_winner_n_loser(stats: pd.DataFrame, winner_col: str = "winner") -> pd.Da
 
     for column in stats.columns:
         if not column.startswith("red_fighter_"):
+            continue
+        if column in CORNER_IDENTITY_COLUMNS:
             continue
 
         base = column.removeprefix("red_fighter_")

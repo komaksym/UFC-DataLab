@@ -354,6 +354,21 @@ class TestStatsPipeline:
             f"Got: {self.fight_data_raw}"
         )
 
+    def test_new_ufcstats_item_without_fight_id_is_hard_failure(self) -> None:
+        """New UFCStats observations may not silently fall back to names and dates."""
+
+        item = FightData()
+        item["red_fighter_name"] = "Red Fighter"
+        item["blue_fighter_name"] = "Blue Fighter"
+        item["red_fighter_result"] = "W"
+        item["blue_fighter_result"] = "L"
+        item["event_name"] = "UFC Test"
+        item["event_date"] = "January 1, 2026"
+        item["source_provenance"] = "ufcstats"
+
+        with pytest.raises(ValueError, match="fight_id"):
+            self.pipeline.process_item(item, StatsSpider)
+
     @pytest.mark.parametrize(
         ("red_result", "blue_result", "expected_outcome"),
         [

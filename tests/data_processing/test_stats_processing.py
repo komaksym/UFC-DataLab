@@ -61,8 +61,51 @@ def test_build_processed_decisive_only_filters_non_decisive_rows() -> None:
     assert decisive.loc[0, "winner"] == "red"
     assert decisive.loc[0, "winner_name"] == processed.loc[0, "red_fighter_name"]
     assert "fight_outcome" not in decisive.columns
-    assert not any(column.startswith("red_fighter_") for column in decisive.columns)
-    assert not any(column.startswith("blue_fighter_") for column in decisive.columns)
+    assert {"fight_id", "event_id", "red_fighter_id", "blue_fighter_id"}.issubset(decisive.columns)
+    assert "red_fighter_name" not in decisive.columns
+    assert "blue_fighter_name" not in decisive.columns
+
+
+def test_stable_identity_survives_all_bouts_and_decisive_projection() -> None:
+    """Published views retain stable source identity without rotating corner IDs."""
+
+    raw = load_sample_raw_stats().head(1).copy()
+    raw["fight_id"] = "fight-1"
+    raw["event_id"] = "event-1"
+    raw["red_fighter_id"] = "red-1"
+    raw["blue_fighter_id"] = "blue-1"
+    raw["fight_url"] = "http://ufcstats.com/fight-details/fight-1"
+    raw["event_url"] = "http://ufcstats.com/event-details/event-1"
+    raw["red_fighter_url"] = "http://ufcstats.com/fighter-details/red-1"
+    raw["blue_fighter_url"] = "http://ufcstats.com/fighter-details/blue-1"
+    raw["source_provenance"] = "ufcstats"
+    raw["corner_orientation"] = "red_blue"
+
+    all_bouts = build_processed_all_bouts(raw, load_athlete_stats())
+    decisive = build_processed_decisive_only(all_bouts)
+
+    for frame in (all_bouts, decisive):
+        assert frame.loc[0, "fight_id"] == "fight-1"
+        assert frame.loc[0, "event_id"] == "event-1"
+        assert frame.loc[0, "red_fighter_id"] == "red-1"
+        assert frame.loc[0, "blue_fighter_id"] == "blue-1"
+        assert frame.loc[0, "corner_orientation"] == "red_blue"
+        assert frame.loc[0, "identity_status"] == "stable"
+
+    assert decisive.loc[0, "winner_name"] == all_bouts.loc[0, "red_fighter_name"]
+
+
+def test_pre_id_processed_rows_are_visible_legacy_warnings() -> None:
+    """Historical tracked rows without source IDs stay usable but visibly legacy."""
+
+    all_bouts = build_processed_all_bouts(
+        load_sample_raw_stats().head(1),
+        load_athlete_stats(),
+    )
+
+    assert all_bouts.loc[0, "identity_status"] == "legacy_fallback"
+    assert all_bouts.loc[0, "record_state"] == "warning"
+    assert all_bouts.loc[0, "source_provenance"] == "legacy_historical"
 
 
 def test_build_merged_stats_scorecards_carries_fight_outcome() -> None:
@@ -100,4 +143,10 @@ def test_decisive_processed_schema_matches_tracked_output() -> None:
 
     generated = build_processed_decisive_only(build_processed_all_bouts(raw_stats, athlete_stats))
 
-    assert generated.columns.tolist() == tracked.columns.tolist()
+    assert [column for column in generated.columns if column in tracked.columns] == tracked.columns.tolist()
+    assert generated.columns[:4].tolist() == [
+        "fight_id",
+        "event_id",
+        "red_fighter_id",
+        "blue_fighter_id",
+    ]

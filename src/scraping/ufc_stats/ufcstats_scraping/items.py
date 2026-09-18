@@ -8,6 +8,20 @@ import scrapy
 class FightData(scrapy.Item):
     """Schema for UFC fight data with type hints and documentation."""
 
+    # Stable UFCStats source identity and provenance
+    fight_id = scrapy.Field()
+    event_id = scrapy.Field()
+    red_fighter_id = scrapy.Field()
+    blue_fighter_id = scrapy.Field()
+    fight_url = scrapy.Field()
+    event_url = scrapy.Field()
+    red_fighter_url = scrapy.Field()
+    blue_fighter_url = scrapy.Field()
+    corner_orientation = scrapy.Field()
+    source_provenance = scrapy.Field()
+    identity_status = scrapy.Field()
+    record_state = scrapy.Field()
+
     # Fight participant information
     red_fighter_name = scrapy.Field()
     blue_fighter_name = scrapy.Field()
