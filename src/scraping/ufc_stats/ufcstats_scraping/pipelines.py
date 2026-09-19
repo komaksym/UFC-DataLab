@@ -11,6 +11,13 @@ from typing import Any, Dict
 
 from itemadapter import ItemAdapter
 
+from .identity import (
+    LEGACY_FALLBACK_STATUS,
+    SOURCE_UFCSTATS,
+    STABLE_IDENTITY_STATUS,
+    is_missing_id,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +49,7 @@ class StatsPipeline:
         try:
             adapter = ItemAdapter(item)
             self.clean_text_fields(adapter)
+            self.normalize_identity(adapter)
             self.normalize_results(adapter)
             self.process_fight_outcome(adapter)
 
@@ -78,22 +86,99 @@ class StatsPipeline:
 
         return True
 
+    IDENTITY_FIELDS = frozenset(
+        {
+            "fight_id",
+            "event_id",
+            "red_fighter_id",
+            "blue_fighter_id",
+            "fight_url",
+            "event_url",
+            "red_fighter_url",
+            "blue_fighter_url",
+            "source",
+            "identity_status",
+        }
+    )
+
     def clean_text_fields(self, adapter: ItemAdapter) -> None:
         """Clean and normalize text fields."""
 
         for fieldname in adapter.field_names():
-            value = adapter.get(fieldname, "-")
+            value = adapter.get(fieldname)
+            if value is None:
+                # Missing stable identity stays missing so the hard identity
+                # check can fail loudly; other missing fields keep the legacy
+                # "-" placeholder contract.
+                if fieldname in self.IDENTITY_FIELDS:
+                    continue
+                adapter[fieldname] = "-"
+                continue
             if isinstance(value, list):
                 # Join lists and clean whitespace
                 value = " ".join(value)
                 value = " ".join(value.replace("\n", "").split())
             else:
                 try:
-                    value = value.strip()
+                    value = value.strip() if isinstance(value, str) else value
                 except Exception as e:
                     logger.error(f"Error stripping field: {fieldname}", {str(e)})
                     raise
             adapter[fieldname] = value
+
+    def normalize_identity(self, adapter: ItemAdapter) -> None:
+        """Validate stable UFCStats identity for a newly scraped record.
+
+        A new scrape without ``fight_id`` is a hard identity failure and
+        raises. ``identity_status=legacy_fallback`` is never assigned here;
+        it is reserved for genuinely pre-ID historical records normalized in
+        the dataset-processing layer, where it remains visibly warning-level.
+        """
+
+        fight_url = adapter.get("fight_url")
+        if is_missing_id(fight_url):
+            # Preserve provenance even when the spider propagated the URL.
+            pass
+
+        fight_id = adapter.get("fight_id")
+        if is_missing_id(fight_id):
+            raise ValueError(
+                "Hard identity failure: newly scraped record without fight_id "
+                f"(fight_url={fight_url!r}). legacy_fallback is reserved for "
+                "genuinely pre-ID historical records."
+            )
+
+        for field in ("event_id", "red_fighter_id", "blue_fighter_id"):
+            if is_missing_id(adapter.get(field)):
+                raise ValueError(
+                    f"Hard identity failure: newly scraped record without {field} "
+                    f"(fight_id={fight_id!r})."
+                )
+
+        red_id = str(adapter.get("red_fighter_id")).strip()
+        blue_id = str(adapter.get("blue_fighter_id")).strip()
+        if red_id == blue_id:
+            raise ValueError(
+                f"Hard identity failure: red/blue corners share fighter_id "
+                f"{red_id!r} (fight_id={fight_id!r}). Corners must stay distinct "
+                "and aligned with names/results."
+            )
+
+        source = adapter.get("source")
+        if is_missing_id(source):
+            adapter["source"] = SOURCE_UFCSTATS
+
+        # New scrapes with a stable fight_id are stable by construction.
+        # Legacy fallback is assigned only in dataset processing for pre-ID rows.
+        status = adapter.get("identity_status")
+        if is_missing_id(status):
+            adapter["identity_status"] = STABLE_IDENTITY_STATUS
+        elif status != STABLE_IDENTITY_STATUS:
+            raise ValueError(
+                f"Hard identity failure: new scraped record must not carry "
+                f"identity_status={status!r} (fight_id={fight_id!r}). "
+                f"{LEGACY_FALLBACK_STATUS} is reserved for pre-ID history."
+            )
 
     def process_nicknames(self, adapter: ItemAdapter) -> None:
         """Clean fighter nicknames."""

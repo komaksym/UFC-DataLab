@@ -6,6 +6,10 @@ import scrapy
 from scrapy.http.request import Request
 from scrapy.http.response import Response
 
+from ..identity import (
+    SOURCE_UFCSTATS,
+    extract_ufcstats_id,
+)
 from ..items import FightData
 
 
@@ -45,7 +49,8 @@ class StatsSpider(scrapy.Spider):
 
         When running in incremental mode, events at or before the ``since``
         date are skipped entirely — no event or fight pages are fetched for
-        them.
+        them. The stable ``event_id`` is derived from the event URL and
+        carried in request metadata so ``parse_event`` can retain it.
         """
 
         rows = response.css("tr.b-statistics__table-row")
@@ -65,23 +70,44 @@ class StatsSpider(scrapy.Spider):
                     )
                     continue
 
-            yield scrapy.Request(url=event_link, callback=self.parse_event)
+            event_id = extract_ufcstats_id(event_link, "event")
+            yield scrapy.Request(
+                url=event_link,
+                callback=self.parse_event,
+                meta={"event_id": event_id, "event_url": event_link},
+            )
 
     def parse_event(self, response: Response) -> Iterator[Request]:
         """Extract event data and follow links to individual fights."""
+
+        # Prefer the stable ID from the event URL; fall back to request meta
+        # (used by file:// fixture responses that lack a real event URL).
+        meta_event_id = response.meta.get("event_id") if hasattr(response, "meta") else None
+        meta_event_url = response.meta.get("event_url") if hasattr(response, "meta") else None
+        event_id = extract_ufcstats_id(response.url, "event") or meta_event_id
+        event_url = response.url if "ufcstats.com/event-details/" in str(response.url) else meta_event_url
 
         event_data: Dict[str, Any] = {
             "name": response.css("h2.b-content__title span::text").get(),
             "date": response.xpath("/html/body/section/div/div/div[1]/ul/li[1]/text()").getall(),
             "location": response.css("li.b-list__box-list-item:nth-child(2)::text").getall(),
+            "event_id": event_id,
+            "event_url": event_url,
         }
 
         fights_links: List[str] = response.css("tr.js-fight-details-click::attr(data-link)").getall()
         for fight_link in fights_links:
+            fight_id = extract_ufcstats_id(fight_link, "fight")
             yield scrapy.Request(
                 url=fight_link,
                 callback=self.parse_fight,
-                meta={"event_data": event_data},
+                meta={
+                    "event_data": event_data,
+                    "event_id": event_id,
+                    "event_url": event_url,
+                    "fight_id": fight_id,
+                    "fight_url": fight_link,
+                },
                 errback=self.handle_error,
             )
 
@@ -96,6 +122,10 @@ class StatsSpider(scrapy.Spider):
         fight_data_item["event_date"] = event_data["date"]
         fight_data_item["event_location"] = event_data["location"]
 
+        # Stable UFCStats identity and provenance. Red is the first corner on
+        # the fight page, blue is the second; IDs and URLs must stay aligned.
+        fight_data_item.update(self.extract_fight_identity(response, event_data))
+
         # Parse general fight data
         fight_data_item = self.parse_fight_general_data(response, fight_data_item)
         # Parse detailed fight data
@@ -107,6 +137,62 @@ class StatsSpider(scrapy.Spider):
             return None
 
         yield fight_data_item
+
+    def extract_fight_identity(self, response: Response, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Derive stable fight/event/fighter IDs from source links.
+
+        The fight ID comes from the fight URL, the event ID from the event
+        link on the fight page (falling back to event-request metadata), and
+        the corner fighter IDs from the red/blue person links in page order.
+        Red/blue orientation is positional: the first person block is red.
+        """
+
+        meta = response.meta if hasattr(response, "meta") else {}
+        meta_event_id = meta.get("event_id") or event_data.get("event_id")
+        meta_event_url = meta.get("event_url") or event_data.get("event_url")
+        meta_fight_id = meta.get("fight_id")
+        meta_fight_url = meta.get("fight_url")
+
+        fight_url = meta_fight_url or response.url
+        # Prefer the real fight URL; fixture file:// URLs carry no fight ID.
+        fight_id = extract_ufcstats_id(response.url, "fight") or meta_fight_id
+
+        event_href = response.css("h2.b-content__title a::attr(href)").get()
+        event_url = event_href or meta_event_url
+        if event_url and "ufcstats.com/event-details/" not in str(event_url):
+            event_url = meta_event_url
+        event_id = extract_ufcstats_id(event_href, "event") or meta_event_id
+        # Fall back to the meta event URL when the page title has no link
+        # (older event pages render the title as plain text).
+        if event_id is None and meta_event_url:
+            event_id = extract_ufcstats_id(meta_event_url, "event") or meta_event_id
+        if event_url is None:
+            event_url = meta_event_url
+
+        corner_links: List[str] = response.css(
+            "div.b-fight-details__person h3 a::attr(href)"
+        ).getall()
+        red_fighter_url = corner_links[0] if len(corner_links) > 0 else None
+        blue_fighter_url = corner_links[1] if len(corner_links) > 1 else None
+        red_fighter_id = extract_ufcstats_id(red_fighter_url, "fighter")
+        blue_fighter_id = extract_ufcstats_id(blue_fighter_url, "fighter")
+
+        # When the response URL is a fixture placeholder, keep the propagated
+        # fight URL so provenance still points at the real source page.
+        if "ufcstats.com/fight-details/" not in str(response.url) and meta_fight_url:
+            fight_url = meta_fight_url
+
+        return {
+            "fight_id": fight_id,
+            "event_id": event_id,
+            "red_fighter_id": red_fighter_id,
+            "blue_fighter_id": blue_fighter_id,
+            "fight_url": fight_url,
+            "event_url": event_url,
+            "red_fighter_url": red_fighter_url,
+            "blue_fighter_url": blue_fighter_url,
+            "source": SOURCE_UFCSTATS,
+        }
 
     def parse_fight_general_data(self, response: Response, fight_data_item):
         """Parses general fight data like names, bout type, time format, referee, etc."""

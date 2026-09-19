@@ -68,12 +68,22 @@ class TestStatsSpider:
     def mock_metadata(self) -> Dict[str, Dict[str, Any]]:
         """Fixture providing sample event metadata for testing."""
 
+        event_id = "daff32bc96d1eabf"
+        event_url = f"http://ufcstats.com/event-details/{event_id}"
+        fight_id = "b35e47f2f58ef026"
+        fight_url = f"http://ufcstats.com/fight-details/{fight_id}"
         return {
             "event_data": {
                 "name": "\n              UFC 309: Jones vs. Miocic\n            ",
                 "date": ["\n      ", "\n      November 16, 2024\n    "],
                 "location": ["\n      ", "\n\n      New York City, New York, USA\n    "],
-            }
+                "event_id": event_id,
+                "event_url": event_url,
+            },
+            "event_id": event_id,
+            "event_url": event_url,
+            "fight_id": fight_id,
+            "fight_url": fight_url,
         }
 
     def test_parse_event(self, mock_metadata: Dict[str, Dict[str, Any]]) -> None:
@@ -83,15 +93,21 @@ class TestStatsSpider:
         - Event metadata is correctly extracted
         - All fight links are valid URLs
         - Links maintain expected format
+        - Stable fight IDs propagate in request metadata
         """
 
         responses: List[Request] = list(
             self.spider.parse_event(self.mock_response(self.mock_pages["single_event"]))
         )
 
-        assert responses[0].meta == mock_metadata, (
-            f"Event metadata mismatch.\nExpected: {mock_metadata}\nGot: {responses[0].meta}"
-        )
+        # File:// fixture has no real event URL, so event_id falls back to None,
+        # but every fight request must carry the stable fight_id from data-link.
+        assert responses[0].meta["event_data"]["name"] == mock_metadata["event_data"]["name"]
+        assert "event_id" in responses[0].meta["event_data"]
+        assert "event_url" in responses[0].meta["event_data"]
+        assert responses[0].meta["fight_id"] == "b35e47f2f58ef026"
+        assert responses[0].meta["fight_url"] == "http://ufcstats.com/fight-details/b35e47f2f58ef026"
+        assert responses[0].meta["event_data"]["event_id"] is None
 
         assert all(response.url.startswith("http://ufcstats.com/fight-details/") for response in responses), (
             f"Invalid fight links detected.\n"
@@ -167,6 +183,8 @@ class TestStatsSpider:
                 "blue_fighter_sig_str_pct": "\n      41%\n    ",
                 "blue_fighter_sub_att": "\n      0\n    ",
                 "blue_fighter_total_str": "\n      42 of 94\n    ",
+                "blue_fighter_id": "d28dee5c705991df",
+                "blue_fighter_url": "http://ufcstats.com/fighter-details/d28dee5c705991df",
                 "bonus": "fight_page_files/belt.png",
                 "bout_type": "\n      UFC Heavyweight Title Bout\n    ",
                 "details": [
@@ -249,6 +267,11 @@ class TestStatsSpider:
                 "event_date": ["\n      ", "\n      November 16, 2024\n    "],
                 "event_location": ["\n      ", "\n\n      New York City, New York, USA\n    "],
                 "event_name": "\n              UFC 309: Jones vs. Miocic\n            ",
+                "event_id": "daff32bc96d1eabf",
+                "event_url": "http://ufcstats.com/event-details/daff32bc96d1eabf",
+                "fight_id": "b35e47f2f58ef026",
+                "fight_url": "http://ufcstats.com/fight-details/b35e47f2f58ef026",
+                "source": "ufcstats",
                 "method": " KO/TKO ",
                 "red_fighter_KD": "\n      1\n    ",
                 "red_fighter_TD": "\n      1 of 1\n    ",
@@ -274,6 +297,8 @@ class TestStatsSpider:
                 "red_fighter_sig_str_pct": "\n      80%\n    ",
                 "red_fighter_sub_att": "\n      0\n    ",
                 "red_fighter_total_str": "\n      104 of 128\n    ",
+                "red_fighter_id": "07f72a2a7591b409",
+                "red_fighter_url": "http://ufcstats.com/fighter-details/07f72a2a7591b409",
                 "referee": "\n                                Herb Dean\n                            ",
                 "round": "\n        3\n      ",
                 "time": "\n        4:29\n\n      ",
@@ -300,3 +325,55 @@ class TestStatsSpider:
         assert isinstance(response[0], FightData), (
             f"Invalid response type.\nExpected: FightData\nGot: {type(response[0])}"
         )
+
+    def test_parse_fight_retains_stable_identity_and_provenance(
+        self, mock_metadata: Dict[str, Dict[str, Any]]
+    ) -> None:
+        """Scraped records retain IDs, URLs, orientation, and provenance."""
+
+        item = list(
+            self.spider.parse_fight(self.mock_response(self.mock_pages["single_fight"], mock_metadata))
+        )[0]
+
+        assert item["fight_id"] == "b35e47f2f58ef026"
+        assert item["event_id"] == "daff32bc96d1eabf"
+        assert item["red_fighter_id"] == "07f72a2a7591b409"
+        assert item["blue_fighter_id"] == "d28dee5c705991df"
+        assert item["fight_url"] == "http://ufcstats.com/fight-details/b35e47f2f58ef026"
+        assert item["event_url"] == "http://ufcstats.com/event-details/daff32bc96d1eabf"
+        assert item["red_fighter_url"] == "http://ufcstats.com/fighter-details/07f72a2a7591b409"
+        assert item["blue_fighter_url"] == "http://ufcstats.com/fighter-details/d28dee5c705991df"
+        assert item["source"] == "ufcstats"
+        # Red/blue orientation: first corner on the page is red.
+        assert item["red_fighter_name"].strip() == "Jon Jones"
+        assert item["blue_fighter_name"].strip() == "Stipe Miocic"
+        assert item["red_fighter_result"].strip() == "W"
+        assert item["blue_fighter_result"].strip() == "L"
+
+    def test_parse_event_propagates_stable_fight_ids(self) -> None:
+        """Event parsing carries stable fight IDs without collapsing rows."""
+
+        responses: List[Request] = list(
+            self.spider.parse_event(self.mock_response(self.mock_pages["single_event"]))
+        )
+
+        fight_ids = [response.meta["fight_id"] for response in responses]
+        assert fight_ids[0] == "b35e47f2f58ef026"
+        # Same-card bouts keep distinct stable IDs (no name-based collapsing).
+        assert len(set(fight_ids)) == len(fight_ids)
+        assert all(url.startswith("http://ufcstats.com/fight-details/") for url in [r.url for r in responses])
+
+    def test_extract_ufcstats_id_parses_detail_urls(self) -> None:
+        """IDs derive from source links, never from names or dates."""
+
+        from src.scraping.ufc_stats.ufcstats_scraping.identity import extract_ufcstats_id
+
+        assert extract_ufcstats_id("http://ufcstats.com/fight-details/b35e47f2f58ef026", "fight") == "b35e47f2f58ef026"
+        assert extract_ufcstats_id("http://ufcstats.com/event-details/daff32bc96d1eabf", "event") == "daff32bc96d1eabf"
+        assert (
+            extract_ufcstats_id("http://ufcstats.com/fighter-details/07f72a2a7591b409", "fighter")
+            == "07f72a2a7591b409"
+        )
+        assert extract_ufcstats_id(None, "fight") is None
+        assert extract_ufcstats_id("http://ufcstats.com/statistics/events/completed", "fight") is None
+        assert extract_ufcstats_id("http://ufcstats.com/fight-details/b35e47f2f58ef026", "event") is None
