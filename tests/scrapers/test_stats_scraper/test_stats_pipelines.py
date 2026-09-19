@@ -84,6 +84,16 @@ class TestStatsPipeline:
         self.fight_data_raw["blue_fighter_sig_str_clinch_pct"] = "\n                  8%\n                "
         self.fight_data_raw["red_fighter_sig_str_ground_pct"] = "\n                  10%\n                "
         self.fight_data_raw["blue_fighter_sig_str_ground_pct"] = "\n                  5%\n                "
+        # Stable UFCStats identity (source IDs, never name-derived).
+        self.fight_data_raw["fight_id"] = "b35e47f2f58ef026"
+        self.fight_data_raw["event_id"] = "72c9c2eadfc3277e"
+        self.fight_data_raw["red_fighter_id"] = "red001aaa"
+        self.fight_data_raw["blue_fighter_id"] = "blue002bbb"
+        self.fight_data_raw["fight_url"] = "http://ufcstats.com/fight-details/b35e47f2f58ef026"
+        self.fight_data_raw["event_url"] = "http://ufcstats.com/event-details/72c9c2eadfc3277e"
+        self.fight_data_raw["red_fighter_url"] = "http://ufcstats.com/fighter-details/red001aaa"
+        self.fight_data_raw["blue_fighter_url"] = "http://ufcstats.com/fighter-details/blue002bbb"
+        self.fight_data_raw["source"] = "ufcstats"
 
     @pytest.fixture
     def mock_item_processed(self) -> None:
@@ -149,6 +159,15 @@ class TestStatsPipeline:
         self.fight_data_processed["round"] = "3"
         self.fight_data_processed["time"] = "4:42"
         self.fight_data_processed["time_format"] = "5 Rnd (5-5-5-5-5)"
+        self.fight_data_processed["fight_id"] = "b35e47f2f58ef026"
+        self.fight_data_processed["event_id"] = "72c9c2eadfc3277e"
+        self.fight_data_processed["red_fighter_id"] = "red001aaa"
+        self.fight_data_processed["blue_fighter_id"] = "blue002bbb"
+        self.fight_data_processed["fight_url"] = "http://ufcstats.com/fight-details/b35e47f2f58ef026"
+        self.fight_data_processed["event_url"] = "http://ufcstats.com/event-details/72c9c2eadfc3277e"
+        self.fight_data_processed["red_fighter_url"] = "http://ufcstats.com/fighter-details/red001aaa"
+        self.fight_data_processed["blue_fighter_url"] = "http://ufcstats.com/fighter-details/blue002bbb"
+        self.fight_data_processed["source"] = "ufcstats"
 
     def test_clean_text_fields(self, mock_item_raw: None, mock_item_processed: None) -> None:
         """Testing the clean_text_fields method"""
@@ -340,6 +359,16 @@ class TestStatsPipeline:
         self.fight_data_processed["round"] = "3"
         self.fight_data_processed["time"] = "4:42"
         self.fight_data_processed["time_format"] = "5 Rnd (5-5-5-5-5)"
+        self.fight_data_processed["fight_id"] = "b35e47f2f58ef026"
+        self.fight_data_processed["event_id"] = "72c9c2eadfc3277e"
+        self.fight_data_processed["red_fighter_id"] = "red001aaa"
+        self.fight_data_processed["blue_fighter_id"] = "blue002bbb"
+        self.fight_data_processed["fight_url"] = "http://ufcstats.com/fight-details/b35e47f2f58ef026"
+        self.fight_data_processed["event_url"] = "http://ufcstats.com/event-details/72c9c2eadfc3277e"
+        self.fight_data_processed["red_fighter_url"] = "http://ufcstats.com/fighter-details/red001aaa"
+        self.fight_data_processed["blue_fighter_url"] = "http://ufcstats.com/fighter-details/blue002bbb"
+        self.fight_data_processed["source"] = "ufcstats"
+        self.fight_data_processed["identity_status"] = "stable"
 
     def test_process_item(self, mock_item_raw: None, mock_item_final_processed: None) -> None:
         """Testing the process_item method."""
@@ -392,3 +421,74 @@ class TestStatsPipeline:
 
         with pytest.raises(ValueError, match="Unsupported fight outcome combination"):
             self.pipeline.process_fight_outcome(adapter)
+
+    def _stable_item(self, **overrides) -> FightData:
+        """Build a minimal stable-identity item for hard-failure cases."""
+
+        item = FightData()
+        item["fight_id"] = "b35e47f2f58ef026"
+        item["event_id"] = "72c9c2eadfc3277e"
+        item["red_fighter_id"] = "red001aaa"
+        item["blue_fighter_id"] = "blue002bbb"
+        item["fight_url"] = "http://ufcstats.com/fight-details/b35e47f2f58ef026"
+        item["event_url"] = "http://ufcstats.com/event-details/72c9c2eadfc3277e"
+        item["red_fighter_url"] = "http://ufcstats.com/fighter-details/red001aaa"
+        item["blue_fighter_url"] = "http://ufcstats.com/fighter-details/blue002bbb"
+        item["source"] = "ufcstats"
+        for key, value in overrides.items():
+            item[key] = value
+        return item
+
+    def test_normalize_identity_assigns_stable_status(self) -> None:
+        """New scrapes with fight_id are stable and keep corner alignment."""
+
+        adapter = ItemAdapter(self._stable_item())
+        self.pipeline.normalize_identity(adapter)
+
+        assert adapter["identity_status"] == "stable"
+        assert adapter["source"] == "ufcstats"
+        assert adapter["red_fighter_id"] != adapter["blue_fighter_id"]
+
+    def test_normalize_identity_rejects_missing_fight_id(self) -> None:
+        """A newly scraped record without fight_id is a hard identity failure."""
+
+        adapter = ItemAdapter(self._stable_item(fight_id="-"))
+        with pytest.raises(ValueError, match="Hard identity failure.*fight_id"):
+            self.pipeline.normalize_identity(adapter)
+
+    def test_normalize_identity_rejects_missing_corner_ids(self) -> None:
+        """Missing event/fighter IDs are hard failures for new scrapes."""
+
+        for field in ("event_id", "red_fighter_id", "blue_fighter_id"):
+            adapter = ItemAdapter(self._stable_item(**{field: None}))
+            with pytest.raises(ValueError, match=f"Hard identity failure.*{field}"):
+                self.pipeline.normalize_identity(adapter)
+
+    def test_normalize_identity_rejects_shared_corner_ids(self) -> None:
+        """Red/blue corners must stay distinct and aligned."""
+
+        adapter = ItemAdapter(self._stable_item(red_fighter_id="same", blue_fighter_id="same"))
+        with pytest.raises(ValueError, match="share fighter_id"):
+            self.pipeline.normalize_identity(adapter)
+
+    def test_normalize_identity_rejects_legacy_fallback_for_new_scrapes(self) -> None:
+        """legacy_fallback is reserved for pre-ID history, never new scrapes."""
+
+        adapter = ItemAdapter(self._stable_item(identity_status="legacy_fallback"))
+        with pytest.raises(ValueError, match="must not carry.*legacy_fallback"):
+            self.pipeline.normalize_identity(adapter)
+
+    def test_process_item_keeps_identity_and_outcome_aligned(self, mock_item_raw: None) -> None:
+        """IDs, names, result markers, and outcomes stay in red/blue corners."""
+
+        self.pipeline.process_item(self.fight_data_raw, StatsSpider)
+        adapter = ItemAdapter(self.fight_data_raw)
+
+        assert adapter["fight_id"] == "b35e47f2f58ef026"
+        assert adapter["red_fighter_id"] == "red001aaa"
+        assert adapter["blue_fighter_id"] == "blue002bbb"
+        assert adapter["red_fighter_name"] == "Colby Covington"
+        assert adapter["blue_fighter_name"] == "Joaquin Buckley"
+        assert (adapter["red_fighter_result"], adapter["blue_fighter_result"]) == ("L", "W")
+        assert adapter["fight_outcome"] == "blue_win"
+        assert adapter["identity_status"] == "stable"

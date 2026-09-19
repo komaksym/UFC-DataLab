@@ -61,8 +61,14 @@ def test_build_processed_decisive_only_filters_non_decisive_rows() -> None:
     assert decisive.loc[0, "winner"] == "red"
     assert decisive.loc[0, "winner_name"] == processed.loc[0, "red_fighter_name"]
     assert "fight_outcome" not in decisive.columns
-    assert not any(column.startswith("red_fighter_") for column in decisive.columns)
-    assert not any(column.startswith("blue_fighter_") for column in decisive.columns)
+    # Stable corner IDs survive the winner/loser projection so the original
+    # bout stays identifiable; other red_/blue_ stat columns become winner_/loser_.
+    assert "red_fighter_id" in decisive.columns
+    assert "blue_fighter_id" in decisive.columns
+    remaining_red = [c for c in decisive.columns if c.startswith("red_fighter_") and c not in {"red_fighter_id", "red_fighter_url"}]
+    remaining_blue = [c for c in decisive.columns if c.startswith("blue_fighter_") and c not in {"blue_fighter_id", "blue_fighter_url"}]
+    assert remaining_red == []
+    assert remaining_blue == []
 
 
 def test_build_merged_stats_scorecards_carries_fight_outcome() -> None:
@@ -100,4 +106,108 @@ def test_decisive_processed_schema_matches_tracked_output() -> None:
 
     generated = build_processed_decisive_only(build_processed_all_bouts(raw_stats, athlete_stats))
 
-    assert generated.columns.tolist() == tracked.columns.tolist()
+    # Tracked outputs predate stable IDs and are legacy rows; the new contract
+    # preserves every tracked column in order while leading with stable identity.
+    for column in tracked.columns:
+        assert column in generated.columns, f"Missing tracked column: {column}"
+    assert generated.columns.tolist()[:5] == [
+        "fight_id",
+        "event_id",
+        "red_fighter_id",
+        "blue_fighter_id",
+        "identity_status",
+    ]
+    # Legacy tracked rows without source IDs stay visibly warning-level.
+    assert set(generated["identity_status"].unique()) <= {"legacy_fallback", "stable"}
+
+
+def _stable_raw_row(fight_id: str, red_result: str = "W", blue_result: str = "L") -> dict[str, object]:
+    """Build a minimal normalized raw row carrying stable UFCStats identity."""
+
+    return {
+        "fight_id": fight_id,
+        "event_id": "ev-1",
+        "red_fighter_id": "red-1",
+        "blue_fighter_id": "blue-1",
+        "fight_url": f"http://ufcstats.com/fight-details/{fight_id}",
+        "event_url": "http://ufcstats.com/event-details/ev-1",
+        "red_fighter_url": "http://ufcstats.com/fighter-details/red-1",
+        "blue_fighter_url": "http://ufcstats.com/fighter-details/blue-1",
+        "source": "ufcstats",
+        "red_fighter_name": "RED FIGHTER",
+        "blue_fighter_name": "BLUE FIGHTER",
+        "event_date": "01/01/2025",
+        "event_name": "UFC Test Event",
+        "red_fighter_result": red_result,
+        "blue_fighter_result": blue_result,
+        "method": "U-DEC",
+        "round": "3",
+        "time": "5:00",
+    }
+
+
+def test_stable_identity_flows_through_all_bouts_decisive_and_merged() -> None:
+    """Stable IDs remain authoritative from raw through derived outputs."""
+
+    from src.data_processing.stats_processing import ensure_fight_outcome
+
+    raw = pd.DataFrame([_stable_raw_row("stable-abc"), _stable_raw_row("stable-draw", "D", "D")])
+    ensured = ensure_fight_outcome(raw)
+
+    assert ensured.loc[0, "identity_status"] == "stable"
+    assert ensured.loc[0, "fight_id"] == "stable-abc"
+    assert ensured.loc[0, "red_fighter_id"] == "red-1"
+
+    all_bouts = build_processed_all_bouts(raw, load_athlete_stats())
+    assert "fight_id" in all_bouts.columns
+    assert all_bouts.loc[0, "identity_status"] == "stable"
+
+    decisive = build_processed_decisive_only(all_bouts)
+    assert len(decisive) == 1
+    assert decisive.iloc[0]["fight_id"] == "stable-abc"
+    assert decisive.iloc[0]["red_fighter_id"] == "red-1"
+    assert decisive.iloc[0]["blue_fighter_id"] == "blue-1"
+
+    scorecards = pd.DataFrame(
+        [
+            {
+                "red_fighter_name": ensured.loc[0, "red_fighter_name"],
+                "blue_fighter_name": ensured.loc[0, "blue_fighter_name"],
+                "event_date": ensured.loc[0, "event_date"],
+                "red_fighter_total_pts": "30 27",
+                "blue_fighter_total_pts": "27 30",
+            }
+        ]
+    )
+    merged = build_merged_stats_scorecards(raw, scorecards)
+    assert "fight_id" in merged.columns
+    assert merged.loc[0, "fight_id"] == "stable-abc"
+    assert merged.loc[0, "fight_outcome"] == "red_win"
+
+
+def test_legacy_rows_without_ids_are_visibly_warning_level() -> None:
+    """Pre-ID historical rows use legacy_fallback, never silent stable identity."""
+
+    from src.data_processing.stats_processing import ensure_fight_outcome
+
+    raw = pd.DataFrame([_stable_raw_row("stable-1")])
+    raw = raw.drop(columns=["fight_id"])
+    ensured = ensure_fight_outcome(raw)
+
+    assert ensured.loc[0, "identity_status"] == "legacy_fallback"
+
+
+def test_ids_names_results_outcomes_stay_corner_aligned() -> None:
+    """Red/blue corners never swap across the processing boundary."""
+
+    from src.data_processing.stats_processing import ensure_fight_outcome
+
+    raw = pd.DataFrame([_stable_raw_row("corner-1", "W", "L")])
+    ensured = ensure_fight_outcome(raw)
+
+    assert ensured.loc[0, "red_fighter_name"] == "RED FIGHTER"
+    assert ensured.loc[0, "blue_fighter_name"] == "BLUE FIGHTER"
+    assert ensured.loc[0, "red_fighter_id"] == "red-1"
+    assert ensured.loc[0, "blue_fighter_id"] == "blue-1"
+    assert (ensured.loc[0, "red_fighter_result"], ensured.loc[0, "blue_fighter_result"]) == ("W", "L")
+    assert ensured.loc[0, "fight_outcome"] == "red_win"

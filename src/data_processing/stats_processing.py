@@ -9,6 +9,8 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
+from .identity import ensure_identity_status
+
 
 DECISIVE_OUTCOMES = {"red_win", "blue_win"}
 NAN_PLACEHOLDERS = ["-", "--", "---"]
@@ -31,6 +33,18 @@ RESULT_ALIASES = {
     "NO-CONTEST": "NC",
 }
 RAW_STATS_COLUMN_ORDER = [
+    # Stable UFCStats identity first: fight_id is primary, legacy rows carry
+    # identity_status=legacy_fallback. Never derive identity from names/dates.
+    "fight_id",
+    "event_id",
+    "red_fighter_id",
+    "blue_fighter_id",
+    "fight_url",
+    "event_url",
+    "red_fighter_url",
+    "blue_fighter_url",
+    "source",
+    "identity_status",
     "red_fighter_name",
     "blue_fighter_name",
     "event_date",
@@ -93,6 +107,13 @@ RAW_STATS_COLUMN_ORDER = [
     "blue_fighter_sig_str_ground_pct",
 ]
 LEGACY_PROCESSED_COLUMN_ORDER = [
+    # Stable identity leads the decisive view so winner/loser projection never
+    # loses the original fight and both source corners.
+    "fight_id",
+    "event_id",
+    "red_fighter_id",
+    "blue_fighter_id",
+    "identity_status",
     "winner_name",
     "loser_name",
     "event_date",
@@ -233,10 +254,14 @@ def ensure_fight_outcome(stats: pd.DataFrame) -> pd.DataFrame:
 
     if "fight_outcome" in stats.columns:
         stats["fight_outcome"] = fight_outcomes
-        return reorder_columns(stats, RAW_STATS_COLUMN_ORDER)
+    else:
+        insert_at = stats.columns.get_loc("blue_fighter_result") + 1
+        stats.insert(insert_at, "fight_outcome", fight_outcomes)
 
-    insert_at = stats.columns.get_loc("blue_fighter_result") + 1
-    stats.insert(insert_at, "fight_outcome", fight_outcomes)
+    # Stable identity is authoritative: assign stable/legacy status without
+    # reordering red/blue corners. IDs, names, results, and outcomes stay
+    # aligned positionally.
+    stats = ensure_identity_status(stats)
     return reorder_columns(stats, RAW_STATS_COLUMN_ORDER)
 
 
@@ -512,9 +537,24 @@ def build_processed_all_bouts(
     return add_winner_column(stats)
 
 
+# Corner identity that must never be projected into winner/loser columns.
+# The decisive view keeps red/blue corner IDs so the original bout stays
+# identifiable after the winner/loser projection.
+PRESERVED_CORNER_IDENTITY = frozenset(
+    {
+        "red_fighter_id",
+        "blue_fighter_id",
+        "red_fighter_url",
+        "blue_fighter_url",
+    }
+)
+
+
 def rename_condition(column: str) -> str:
     """Rename red/blue columns into winner/loser columns."""
 
+    if column in PRESERVED_CORNER_IDENTITY:
+        return column
     if column.startswith("red_fighter_"):
         return column.replace("red_fighter_", "winner_")
     if column.startswith("blue_fighter_"):
@@ -531,10 +571,14 @@ def set_winner_n_loser(stats: pd.DataFrame, winner_col: str = "winner") -> pd.Da
     for column in stats.columns:
         if not column.startswith("red_fighter_"):
             continue
+        if column in PRESERVED_CORNER_IDENTITY:
+            continue
 
         base = column.removeprefix("red_fighter_")
         red_col = f"red_fighter_{base}"
         blue_col = f"blue_fighter_{base}"
+        if red_col in PRESERVED_CORNER_IDENTITY or blue_col in PRESERVED_CORNER_IDENTITY:
+            continue
         if blue_col not in stats.columns:
             continue
 
